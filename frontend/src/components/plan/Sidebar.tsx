@@ -6,8 +6,6 @@ import { usePlanContext } from '@/context/PlanContexProvider';
 import { controlCenterSections, planSections } from '@/lib/constants';
 import { LockIcon } from 'lucide-react';
 import { TooltipContainer } from '@/components/shared/Toolip';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-
 interface SidebarProps {
   isMobile?: boolean;
   isPublic: boolean;
@@ -28,7 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({  isMobile = false, isPublic }) => {
         <div className="flex flex-col">
           {sections.map((section) => (
             <Link
-              to={`/plans/${planId}/${isPublic ? 'community-plan' : 'plan'}#${section.id}`}
+              to={`/plan/${planId}#${section.id}`}
               key={section.id}
             >
               <Button

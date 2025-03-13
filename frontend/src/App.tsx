@@ -12,10 +12,10 @@ export default function App() {
         {/* <Route path="/" element={<Plan />} /> */}
         {/* Layout wrapper for specific routes */}
         <Route
-          path="/plan"
+          path="/plan/:planId"
           element={
             <Layout>
-              <Home />
+              <Plan />
             </Layout>
           }
         />      

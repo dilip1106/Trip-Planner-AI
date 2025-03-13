@@ -1,119 +1,279 @@
+/* @tailwind Base and Utilities */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ... */
-
+/* Custom Base Layer */
 @layer base {
   :root {
-
     --background: 0 0% 100%;
-
     --foreground: 224 71.4% 4.1%;
-
     --card: 0 0% 100%;
-
     --card-foreground: 224 71.4% 4.1%;
-
     --popover: 0 0% 100%;
-
     --popover-foreground: 224 71.4% 4.1%;
-
     --primary: 220.9 39.3% 11%;
-
     --primary-foreground: 210 20% 98%;
-
     --secondary: 220 14.3% 95.9%;
-
     --secondary-foreground: 220.9 39.3% 11%;
-
     --muted: 220 14.3% 95.9%;
-
     --muted-foreground: 220 8.9% 46.1%;
-
     --accent: 220 14.3% 95.9%;
-
     --accent-foreground: 220.9 39.3% 11%;
-
     --destructive: 0 84.2% 60.2%;
-
     --destructive-foreground: 210 20% 98%;
-
     --border: 220 13% 91%;
-
     --input: 220 13% 91%;
-
     --ring: 224 71.4% 4.1%;
-
+    --radius: 0.5rem;
     --chart-1: 12 76% 61%;
-
     --chart-2: 173 58% 39%;
-
     --chart-3: 197 37% 24%;
-
     --chart-4: 43 74% 66%;
-
     --chart-5: 27 87% 67%;
-
-    --radius: 0.5rem
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* Dark Mode Custom Variables */
   .dark {
-
     --background: 224 71.4% 4.1%;
-
     --foreground: 210 20% 98%;
-
     --card: 224 71.4% 4.1%;
-
     --card-foreground: 210 20% 98%;
-
     --popover: 224 71.4% 4.1%;
-
     --popover-foreground: 210 20% 98%;
-
     --primary: 210 20% 98%;
-
     --primary-foreground: 220.9 39.3% 11%;
-
     --secondary: 215 27.9% 16.9%;
-
     --secondary-foreground: 210 20% 98%;
-
     --muted: 215 27.9% 16.9%;
-
     --muted-foreground: 217.9 10.6% 64.9%;
-
     --accent: 215 27.9% 16.9%;
-
     --accent-foreground: 210 20% 98%;
-
     --destructive: 0 62.8% 30.6%;
-
     --destructive-foreground: 210 20% 98%;
-
     --border: 215 27.9% 16.9%;
-
     --input: 215 27.9% 16.9%;
-
     --ring: 216 12.2% 83.9%;
-
     --chart-1: 220 70% 50%;
-
     --chart-2: 160 60% 45%;
-
     --chart-3: 30 80% 55%;
-
     --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
 
-    --chart-5: 340 75% 55%
+  .bg-background {
+    background-color: hsl(var(--background));
+  }
+
+  .text-foreground {
+    color: hsl(var(--foreground));
+  }
+
+  .border-border {
+    border-color: hsl(var(--border));
   }
 }
 
+/* Global Styles */
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border;  /* Apply custom border */
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground; /* Apply background and text color */
   }
+}
+
+html {
+  --scroll-behavior: smooth !important;
+  scroll-behavior: smooth !important;
+}
+
+/* Custom Classes */
+.mapboxgl-marker {
+  left: 0;
+  opacity: 1;
+  position: absolute;
+  top: 0;
+  transition: opacity 0.2s;
+  will-change: transform;
+}
+
+/* Button Classes */
+.cl-formButtonPrimary {
+  @apply inline-flex h-9 items-center justify-center whitespace-nowrap rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground ring-offset-background transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50;
+}
+
+/* Card and Alert Classes */
+.cl-card,
+.cl-socialButtonsBlockButton,
+.cl-alert,
+.cl-identityPreview,
+.cl-phoneInputBox,
+.cl-userButtonPopoverCard {
+  @apply border border-input bg-background;
+}
+
+/* Text Classes */
+.cl-headerTitle,
+.cl-socialButtonsBlockButtonText,
+.cl-loading,
+.cl-formFieldLabel,
+.cl-formHeaderTitle,
+.cl-selectButton__countryCode,
+.cl-selectButton__countryCode p,
+.cl-selectOption p,
+.cl-selectOption div,
+.cl-modalCloseButton,
+.cl-navbarButton,
+.cl-breadcrumbsItem.cl-breadcrumbsItem__currentPage,
+.cl-profileSectionTitle p,
+.cl-userPreviewTextContainer,
+.cl-profileSectionContent p,
+.cl-form p,
+.cl-accordionTriggerButton {
+  @apply dark:text-foreground;
+}
+
+/* More Classes */
+.cl-dividerLine {
+  @apply bg-border;
+}
+
+.cl-formFieldInput[type="text"],
+.cl-formFieldInput[type="email"],
+.cl-formFieldInput[type="password"] {
+  @apply flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.cl-footerActionLink {
+  @apply text-accent-foreground underline hover:text-accent-foreground/90;
+}
+
+.cl-otpCodeFieldInput {
+  @apply border border-b-input text-foreground;
+}
+
+.cl-formResendCodeLink {
+  @apply text-primary disabled:opacity-90;
+}
+
+.cl-selectSearchInput__countryCode {
+  @apply flex h-10 w-full rounded-md border border-b border-input bg-background text-foreground ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+.cl-selectOptionsContainer__countryCode {
+  @apply border border-input bg-background;
+}
+
+.cl-internal-icon,
+.cl-userPreviewSecondaryIdentifier__userButton {
+  @apply text-foreground;
+}
+
+.cl-profileSectionTitle {
+  @apply border-b border-input;
+}
+
+button[data-localization-key="userProfile.start.dangerSection.deleteAccountButton"] {
+  @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+}
+
+.cl-fileDropAreaBox {
+  @apply dark:bg-gray-900;
+}
+
+.cl-fileDropAreaIconBox {
+  @apply dark:bg-gray-800;
+}
+
+.cl-fileDropAreaIcon {
+  @apply dark:text-gray-400;
+}
+
+.cl-fileDropAreaButtonPrimary {
+  @apply h-10 px-4 py-2 text-foreground transition-colors hover:bg-secondary hover:text-accent-foreground;
+}
+
+.cl-userButtonPopoverActionButton,
+.cl-profileSectionPrimaryButton,
+.cl-accordionTriggerButton,
+.cl-navbarButton {
+  @apply hover:bg-accent hover:text-accent-foreground;
+}
+
+.cl-card {
+  @apply rounded-lg shadow-md;
+}
+
+.cl-userButtonPopoverCard {
+  @apply rounded-md;
+}
+
+.cl-userButtonPopoverFooter a {
+  @apply hover:text-muted-foreground;
+}
+
+.cl-badge {
+  @apply rounded-full px-2.5 py-0.5 text-xs;
+}
+
+.cl-badge[data-localization-key="badge__unverified"] {
+  @apply border bg-transparent text-destructive dark:text-red-500;
+}
+
+.cl-formButtonReset {
+  @apply text-foreground hover:bg-secondary;
+}
+
+@keyframes wiggle1 {
+  0%, 100% {
+      translate: 25px;
+  }
+  50% {
+      translate: -25px;
+  }
+}
+.animate-wiggle1-left-right {
+  animation: wiggle1 12s infinite ease-in-out forwards;
+}
+
+@keyframes wiggle2 {
+  0%, 100% {
+      translate: -25px;
+  }
+  50% {
+      translate: 25px;
+  }
+}
+.animate-wiggle2-left-right {
+  animation: wiggle2 12s infinite ease-in-out forwards;
+}
+@keyframes wiggle3 {
+  0%, 100% {
+      translate: 40px;
+  }
+  50% {
+      translate: -40px;
+  }
+}
+.animate-wiggle3-left-right {
+  animation: wiggle3 12s infinite ease-in-out forwards;
 }

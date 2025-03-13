@@ -32,6 +32,16 @@ import {
 } from "lucide-react";
 import {ReactNode} from "react";
 
+export const features = [
+  "Top Spots Unveiled",
+  "Tailored Itineraries",
+  "Optimal Timing",
+  "Foodie Hotspots",
+  "Prime Experiences",
+  "Invite Others",
+  "Expense tracking",
+];
+
 // Define your custom data model based on the new backend or storage system
 interface Plan {
   contentGenerationState: {
