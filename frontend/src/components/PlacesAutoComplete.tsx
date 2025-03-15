@@ -23,7 +23,7 @@ const PlacesAutoComplete = ({
 
   const {placesService, placePredictions, getPlacePredictions, isPlacePredictionsLoading} =
     usePlacesService({
-      apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+      apiKey: "AIzaSyCuUQJBuYNESeQwoQPGUsg0uAnYpPz_rKo",
       options: {
         types: ["(cities)"],
         input: field.value,

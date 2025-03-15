@@ -3,12 +3,14 @@ import Plan from './pages/Plan';
 import Layout from './layout/Plan';
 import PlanPage from './pages/Plan'; 
 import Home from './pages/Home'; 
+import Dashboard from './components/dashboard/Dashboard';
 
 export default function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<Dashboard />} />
         {/* <Route path="/" element={<Plan />} /> */}
         {/* Layout wrapper for specific routes */}
         <Route

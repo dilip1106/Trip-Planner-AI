@@ -12,7 +12,7 @@ const PlanLayoutContent = ({
 }) => {
   return (
     <PlanContextProvider isPublic={isPublic}>
-      <Header  isPublic={true}/>
+      <Header/>
       <div className="w-full lg:px-20 px-5 py-6 min-h-[calc(100svh-6.5rem)] bg-background">
         <div className="md:grid md:grid-cols-5 lg:gap-2 md:gap-5 gap-3">
           <div

@@ -19,6 +19,17 @@ const Sidebar: React.FC<SidebarProps> = ({  isMobile = false, isPublic }) => {
     else return planSections;
   }, [planSections, isPublic]);
 
+
+  const handleSectionClick = (sectionId: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      // Update URL without triggering navigation
+      window.history.pushState({}, '', `${location.pathname}#${sectionId}`);
+    }
+  };
+
   return (
     <aside className="space-y-6 sticky top-[5.6rem] h-fit">
       <div className="space-y-2">
@@ -28,6 +39,7 @@ const Sidebar: React.FC<SidebarProps> = ({  isMobile = false, isPublic }) => {
             <Link
               to={`/plan/${planId}#${section.id}`}
               key={section.id}
+              onClick={handleSectionClick(section.id)}
             >
               <Button
                 aria-label={section.name}
@@ -67,7 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({  isMobile = false, isPublic }) => {
               );
 
             return (
-              <Link to={isPublic ? `#` : `/plans/${planId}/${link.id}`} key={link.id}>
+              <Link to={isPublic ? `#` : `/plan/${planId}/${link.id}`} key={link.id}>
                 <TooltipContainer text={link.tooltipText}>
                   <Button
                     disabled={isPublic}

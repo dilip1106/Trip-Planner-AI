@@ -37,11 +37,11 @@ const Header = () => {
             </ClerkLoading>
             <SignedOut>
               <ThemeDropdown />
-              <SignInButton mode="modal" />
+              <SignInButton mode="modal"/>
             </SignedOut>
             <SignedIn>
               <div className="flex justify-center items-center gap-2">
-                <PlanComboBox />
+                {/* <PlanComboBox /> */}
                 <DrawerWithDialog />
                 <FeedbackSheet />
                 <ThemeDropdown />

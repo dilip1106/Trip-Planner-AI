@@ -14,7 +14,6 @@ import {
     DialogTitle,
   } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
-import { useUser } from '@clerk/clerk-react'
 
 // Replace this with your backend API call for user data
 const fetchUserData = async () => {
@@ -49,7 +48,7 @@ const DrawerWithDialog = ({ shouldOpenForCreatePlan = false }) => {
     getUserData();
   }, []);
 
-  const { isSignedIn, user, isLoaded } = useUser()
+  // const { user } = useUser()
 
   // if (!isLoaded) {
   //   // Handle loading state
@@ -61,8 +60,8 @@ const DrawerWithDialog = ({ shouldOpenForCreatePlan = false }) => {
   //   return 
   // }
 
-  const boughtCredits = user?.credits ?? 0;
-  const freeCredits = user?.freeCredits ?? 0;
+  const boughtCredits = 0;
+  const freeCredits = 1;
   const totalCredits = freeCredits + boughtCredits;
 
   const btnText = shouldOpenForCreatePlan
@@ -82,7 +81,7 @@ const DrawerWithDialog = ({ shouldOpenForCreatePlan = false }) => {
     <CreditContent
       boughtCredits={boughtCredits}
       freeCredits={freeCredits}
-      email={user?.email}
+      email={"dilipteli38@gmail.com"}
     />
   );
 
