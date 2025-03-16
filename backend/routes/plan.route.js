@@ -13,7 +13,6 @@ import {
   generatePlan
 } from '../controllers/plan.controller.js';
 import { authenticateUser } from '../middleware/verifyAuthUser.js';
-import { requireAuth } from '../middleware/auth.js';
 // import { authenticateUser } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
