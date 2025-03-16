@@ -4,7 +4,12 @@ import mongoose from 'mongoose';
 const planSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+    ref: 'User',
+    required: true
+  },
+  clerkUserId: {
+    type: String,
+    required: true
   },
   destination: {
     type: String,
@@ -77,7 +82,40 @@ const planSchema = new mongoose.Schema({
   isPublic: {
     type: Boolean,
     default: false
-  }
+  },
+  // Collaborator information within the plan itself
+  collaborators: [{
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    clerkUserId: {
+      type: String,
+      required: true
+    },
+    email: {
+      type: String,
+      required: true
+    },
+    name: {
+      type: String
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'accepted'],
+      default: 'pending'
+    },
+    inviteToken: {
+      type: String
+    },
+    inviteExpires: {
+      type: Date
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, { timestamps: true });
 
 const Plan = mongoose.model('Plan', planSchema);

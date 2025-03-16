@@ -10,8 +10,10 @@
     "http": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.10.1",
+    "nodemailer": "^6.10.0",
     "nodemon": "^3.1.9",
-    "openai": "^4.87.3"
+    "openai": "^4.87.3",
+    "uuid": "^11.1.0"
   },
   "name": "travel_planner",
   "version": "1.0.0",

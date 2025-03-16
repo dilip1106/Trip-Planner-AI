@@ -1,25 +1,22 @@
-"use client";
-
-import {zodResolver} from "@hookform/resolvers/zod";
-import {useForm} from "react-hook-form";
-import {useAuth} from "@clerk/clerk-react";
-import {Dispatch, SetStateAction, useState, useTransition} from "react";
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import * as z from "zod";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-import {Button} from "@/components/ui/button";
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
-import {Loader2, MessageSquarePlus, Wand2} from "lucide-react";
-import {generatePlanAction} from "@/lib/actions/generateplanAction";
-import PlacesAutoComplete from "@/components/PlacesAutoComplete";
-
-import {generateEmptyPlanAction} from "@/lib/actions/generateEmptyPlanAction";
-import {useToast} from "@/components/ui/use-toast";
-import {ACTIVITY_PREFERENCES, COMPANION_PREFERENCES} from "@/lib/constants";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Loader2, MessageSquarePlus, Wand2 } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { ACTIVITY_PREFERENCES, COMPANION_PREFERENCES } from "@/lib/constants";
 import DateRangeSelector from "@/components/common/DateRangeSelector";
+import PlacesAutoComplete from "@/components/PlacesAutoComplete";
 
 const formSchema = z.object({
   placeName: z
-    .string({required_error: "Please select a place"})
+    .string({ required_error: "Please select a place" })
     .min(3, "Place name should be at least 3 character long"),
   datesOfTravel: z.object({
     from: z.date(),
@@ -31,16 +28,15 @@ const formSchema = z.object({
 
 export type formSchemaType = z.infer<typeof formSchema>;
 
-const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>>}) => {
-  const {isSignedIn} = useAuth();
-  if (!isSignedIn) return null;
-
-  const [pendingEmptyPlan, startTransactionEmptyPlan] = useTransition();
-  const [pendingAIPlan, startTransactionAiPlan] = useTransition();
-
+const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) => {
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  
+  const [pendingEmptyPlan, startTransitionEmptyPlan] = useTransition();
+  const [pendingAIPlan, startTransitionAIPlan] = useTransition();
   const [selectedFromList, setSelectedFromList] = useState(false);
-
-  const {toast} = useToast();
 
   const form = useForm<formSchemaType>({
     resolver: zodResolver(formSchema),
@@ -55,6 +51,22 @@ const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>
     },
   });
 
+  if (!isSignedIn || !user) return null;
+
+  // Function to get user data for the backend
+  const getUserData = () => {
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
+    };
+  };
+
   async function onSubmitEmptyPlan(values: z.infer<typeof formSchema>) {
     if (!selectedFromList) {
       form.setError("placeName", {
@@ -64,13 +76,40 @@ const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>
       return;
     }
 
-    startTransactionEmptyPlan(async () => {
-      const planId = await generateEmptyPlanAction(values);
-      closeModal(false);
-      if (planId === null) {
+    if (!values.datesOfTravel.from || !values.datesOfTravel.to) {
+      form.setError("datesOfTravel", {
+        message: "Please select both start and end dates",
+        type: "custom",
+      });
+      return;
+    }
+
+    startTransitionEmptyPlan(async () => {
+      try {
+        const userData = getUserData();
+        
+        const response = await axios.post("http://localhost:5000/api/plan/empty", {
+          userData,
+          destination: values.placeName,
+          fromDate: values.datesOfTravel.from.toISOString(),
+          toDate: values.datesOfTravel.to.toISOString(),
+          activityPreferences: values.activityPreferences,
+          companion: values.companion
+        });
+      
+        closeModal(false);
+        toast({
+          title: "Success",
+          description: "Empty plan created successfully",
+        });
+        
+        navigate(`/plan/${response.data._id}`);
+      } catch (error) {
+        console.error("Error creating empty plan:", error);
         toast({
           title: "Error",
-          description: "Error received from server action",
+          description: axios.isAxiosError(error) ? error.response?.data?.error : "Failed to create empty plan",
+          variant: "destructive"
         });
       }
     });
@@ -85,11 +124,41 @@ const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>
       return;
     }
 
-    startTransactionAiPlan(async () => {
-      const planId = await generatePlanAction(values);
-      closeModal(false);
-      if (planId === null) {
-        console.log("Error received from server action");
+    if (!values.datesOfTravel.from || !values.datesOfTravel.to) {
+      form.setError("datesOfTravel", {
+        message: "Please select both start and end dates",
+        type: "custom",
+      });
+      return;
+    }
+
+    startTransitionAIPlan(async () => {
+      try {
+        const userData = getUserData();
+        
+        const response = await axios.post("http://localhost:5000/api/plan/generate", {
+          userData, // Send user data directly instead of token
+          destination: values.placeName,
+          fromDate: values.datesOfTravel.from.toISOString(),
+          toDate: values.datesOfTravel.to.toISOString(),
+          activityPreferences: values.activityPreferences,
+          companion: values.companion
+        });
+        
+        closeModal(false);
+        toast({
+          title: "Success",
+          description: "AI plan generated successfully",
+        });
+        
+        navigate(`/plan/${response.data._id}`);
+      } catch (error) {
+        console.error("Error generating AI plan:", error);
+        toast({
+          title: "Error",
+          description: axios.isAxiosError(error) ? error.response?.data?.error : "Failed to generate AI plan",
+          variant: "destructive"
+        });
       }
     });
   }
@@ -100,7 +169,7 @@ const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>
         <FormField
           control={form.control}
           name="placeName"
-          render={({field}) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>Search for your destination city</FormLabel>
               <FormControl>
@@ -115,25 +184,25 @@ const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="datesOfTravel"
-          render={({field}) => (
+          render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Select Dates</FormLabel>
-              <DateRangeSelector
-                value={field.value}
-                onChange={field.onChange}
-                forGeneratePlan={true}
-              />
+              <FormControl>
+                <DateRangeSelector value={field.value} onChange={field.onChange} forGeneratePlan={true} />
+              </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="activityPreferences"
-          render={({field}) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>
                 Select the kind of activities you want to do
@@ -149,8 +218,7 @@ const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>
                       duration-200 transition-all ease-in-out
                       rounded-md cursor-pointer select-none
                       flex justify-center items-center
-                      bg-gray-100 has-[:checked]:shadow-sm dark:bg-transparent dark:border dark:border-foreground
-                      "
+                      bg-gray-100 has-[:checked]:shadow-sm dark:bg-transparent dark:border dark:border-foreground"
                     >
                       <input
                         type="checkbox"
@@ -158,13 +226,9 @@ const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>
                         checked={field.value?.includes(activity.id) ?? false}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            field.onChange([...field.value, activity.id]);
+                            field.onChange([...field.value, activity.id])
                           } else {
-                            field.onChange(
-                              field.value.filter(
-                                (selectedActivity) => selectedActivity !== activity.id
-                              )
-                            );
+                            field.onChange(field.value.filter((selectedActivity) => selectedActivity !== activity.id))
                           }
                         }}
                       />
@@ -178,10 +242,11 @@ const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="companion"
-          render={({field}) => (
+          render={({ field }) => (
             <FormItem>
               <FormLabel>
                 Who are you travelling with
@@ -193,21 +258,20 @@ const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>
                     <label
                       key={companion.id}
                       className="flex-1 p-1 opacity-50 hover:opacity-100 dark:opacity-40 dark:hover:opacity-100 
-                has-[:checked]:bg-blue-100 has-[:checked]:opacity-100 dark:has-[:checked]:opacity-100
-                duration-200 transition-all ease-in-out
-                rounded-md cursor-pointer select-none
-                flex justify-center items-center
-                bg-gray-100 has-[:checked]:shadow-sm dark:bg-transparent dark:border dark:border-foreground
-                "
+                      has-[:checked]:bg-blue-100 has-[:checked]:opacity-100 dark:has-[:checked]:opacity-100
+                      duration-200 transition-all ease-in-out
+                      rounded-md cursor-pointer select-none
+                      flex justify-center items-center
+                      bg-gray-100 has-[:checked]:shadow-sm dark:bg-transparent dark:border dark:border-foreground"
                     >
                       <input
                         type="radio"
                         className="hidden"
                         name="companion"
-                        checked={(field.value === companion.id) || false}
+                        checked={field.value === companion.id || false}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            field.onChange(companion.id);
+                            field.onChange(companion.id)
                           }
                         }}
                       />
@@ -221,18 +285,19 @@ const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>
             </FormItem>
           )}
         />
+
         <div className="w-full flex justify-between gap-1">
           <Button
             onClick={() => form.handleSubmit(onSubmitEmptyPlan)()}
             aria-label="generate plan"
-            type="submit"
-            disabled={pendingEmptyPlan || pendingAIPlan || !form.formState.isValid}
+            type="button"
+            disabled={pendingEmptyPlan || pendingAIPlan}
             className="bg-blue-500 text-white hover:bg-blue-600 w-full"
           >
             {pendingEmptyPlan ? (
               <div className="flex gap-1 justify-center items-center">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                <span>Generating Travel Plan...</span>
+                <span>Creating Plan...</span>
               </div>
             ) : (
               <div className="flex gap-1 justify-center items-center">
@@ -245,14 +310,14 @@ const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>
           <Button
             onClick={() => form.handleSubmit(onSubmitAIPlan)()}
             aria-label="generate AI plan"
-            type="submit"
-            disabled={pendingAIPlan || pendingEmptyPlan || !form.formState.isValid}
+            type="button"
+            disabled={pendingAIPlan || pendingEmptyPlan}
             className="bg-indigo-500 text-white hover:bg-indigo-600 w-full group"
           >
             {pendingAIPlan ? (
               <div className="flex gap-1 justify-center items-center">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                <span>Generating AI Travel Plan...</span>
+                <span>Generating AI Plan...</span>
               </div>
             ) : (
               <div className="flex gap-1 justify-center items-center ">
@@ -264,7 +329,8 @@ const NewPlanForm = ({closeModal}: {closeModal: Dispatch<SetStateAction<boolean>
         </div>
       </form>
     </Form>
-  );
-};
+  )
+}
 
-export default NewPlanForm;
+export default NewPlanForm
+

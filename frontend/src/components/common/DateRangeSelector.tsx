@@ -1,75 +1,97 @@
-import {Button} from "@/components/ui/button";
-import {Calendar} from "@/components/ui/calendar";
-import {Popover, PopoverContent, PopoverTrigger} from "@/components/ui/popover";
-import {cn, getFormattedDateRange} from "@/lib/utils";
-import {format, formatDate} from "date-fns";
-import {CalendarIcon} from "lucide-react";
-import {Dispatch, SetStateAction, useState} from "react";
-import {DateRange} from "react-day-picker";
+"use client"
 
-type DateRangeSelectorProps = {
-  onChange: (e: DateRange | undefined) => void;
-  value: DateRange | undefined;
-  forGeneratePlan: boolean;
-};
+import { useState, useEffect } from "react"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Button } from "@/components/ui/button"
+import { CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
 
-const DateRangeSelector = ({value, onChange, forGeneratePlan}: DateRangeSelectorProps) => {
-  const [dateRangePopoverOpen, setDateRangePopoverOpen] = useState(false);
+interface DateRangeSelectorProps {
+  value: {
+    from: Date | undefined
+    to: Date | undefined
+  }
+  onChange: (value: { from: Date | undefined; to: Date | undefined }) => void
+  forGeneratePlan?: boolean
+}
 
-  const resetControl = () => {
-    onChange({from: undefined, to: undefined});
-  };
+const DateRangeSelector = ({ value, onChange, forGeneratePlan = false }: DateRangeSelectorProps) => {
+  const [date, setDate] = useState<{
+    from: Date | undefined
+    to: Date | undefined
+  }>({
+    from: value?.from,
+    to: value?.to,
+  })
+
+  // Update local state when props change
+  useEffect(() => {
+    if (value?.from !== date.from || value?.to !== date.to) {
+      setDate({
+        from: value?.from,
+        to: value?.to,
+      })
+    }
+  }, [value?.from, value?.to])
+
+  // Handle date selection
+  const handleSelect = (selectedDate: any) => {
+    const newDate = {
+      ...date,
+      ...selectedDate,
+    }
+
+    setDate(newDate)
+
+    // Only call onChange when both dates are selected or when clearing
+    if ((newDate.from && newDate.to) || (!newDate.from && !newDate.to)) {
+      onChange(newDate)
+    }
+  }
+
+  // Format the date range for display
+  const formatDateRange = () => {
+    if (date.from && date.to) {
+      return `${format(date.from, "MMM d, yyyy")} - ${format(date.to, "MMM d, yyyy")}`
+    }
+    return "Select date range"
+  }
 
   return (
-    <Popover open={dateRangePopoverOpen} onOpenChange={setDateRangePopoverOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          size={forGeneratePlan ? "default" : "sm"}
-          variant={forGeneratePlan ? "outline" : "default"}
-          className={cn(
-            "pl-3 text-left font-normal",
-            !value && "text-muted-foreground",
-            "flex justify-between",
-            {"bg-foreground/50 text-background": !forGeneratePlan},
-            {
-              "bg-foreground": dateRangePopoverOpen && !forGeneratePlan,
-            }
-          )}
-        >
-          {value && value.from && value.to ? (
-            <span className={cn({"font-semibold": !forGeneratePlan})}>
-              {getFormattedDateRange(value.from, value.to)}
-            </span>
-          ) : (
-            <span className={cn({"text-muted-foreground": forGeneratePlan})}>
-              Pick Travel Dates
-            </span>
-          )}
-          <CalendarIcon className="ml-2 h-4 w-4 text-background" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          month={value?.from}
-          mode="range"
-          numberOfMonths={2}
-          max={10}
-          selected={value}
-          onSelect={(e) => {
-            onChange(e);
-            if (e?.from && e.to) {
-              setDateRangePopoverOpen(false);
-            }
-          }}
-          disabled={(date) => date < new Date("1900-01-01")}
-          initialFocus
-        />
-        <div className="w-full flex justify-end pr-5 pb-3">
-          <Button onClick={resetControl}>Reset</Button>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-};
+    <div className="w-full">
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            className={cn(
+              "w-full justify-start text-left font-normal",
+              !date.from && !date.to && "text-muted-foreground",
+            )}
+          >
+            <CalendarIcon className="mr-2 h-4 w-4" />
+            {formatDateRange()}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto p-0" align="start">
+          <Calendar
+            initialFocus
+            mode="range"
+            defaultMonth={date.from}
+            selected={{
+              from: date.from,
+              to: date.to,
+            }}
+            onSelect={handleSelect}
+            numberOfMonths={2}
+            disabled={forGeneratePlan ? { before: new Date() } : undefined}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}
 
-export default DateRangeSelector;
+export default DateRangeSelector
+

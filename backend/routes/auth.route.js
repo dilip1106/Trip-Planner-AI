@@ -1,25 +1,4 @@
-// import express from "express";
-// import { signup,login,logout,resetPassword, checkAuth, verifyEmail, forgotPassword,fetchAllUsers, saveTime} from "../controllers/auth.controller.js";
-// import { authenticateUser, verifyToken } from "../middleware/verifyToken.js";
-
-// const router = express.Router();
-
-// router.get("/check-auth",verifyToken,checkAuth)
-
-
-// router.post("/signup",signup);
-// router.post("/login",login);
-// router.post("/logout", verifyToken,logout);
-
-// router.post("/verify-email",verifyEmail);
-// router.post("/forgot-password",forgotPassword);
-
-// router.post("/reset-password/:token", resetPassword);
-
-// router.get("/student",fetchAllUsers)
-// router.post("/savetime",verifyToken,saveTime);
-// export default router;
-// Backend routeimport express from 'express';
+// backend/routes/user.routes.js
 import User from '../models/user.model.js';
 import express from 'express';
 const router = express.Router();
@@ -27,46 +6,105 @@ const router = express.Router();
 // API endpoint to save user data after authentication
 router.post('/save-user', async (req, res) => {
   try {
+    
     const userData = req.body;
-
-    if (!userData.clerkUserId) {
-      return res.status(401).json({ error: 'User ID is required' });
+    if (!userData.clerkId) {
+      return res.status(401).json({ error: 'Clerk ID is required' });
     }
-
+    
     // Check if user already exists in your database
-    const existingUser = await User.findOne({ userId: userData.clerkUserId });
+    const existingUser = await User.findOne({ clerkId: userData.clerkId });
     
     let user;
     if (existingUser) {
       // Update user if already exists
       user = await User.findOneAndUpdate(
-        { userId: userData.clerkUserId },
+        { clerkId: userData.clerkId },
         {
-          firstName: userData.firstName || existingUser.firstName,
-          lastName: userData.lastName || existingUser.lastName,
+          name: userData.name || existingUser.name,
           email: userData.email || existingUser.email,
-          username: userData.username || existingUser.username,
-          imageUrl: userData.imageUrl || existingUser.imageUrl
+          image: userData.image || existingUser.image
         },
         { new: true }
       );
     } else {
       // Create new user
       const newUser = new User({
-        userId: userData.clerkUserId,
-        firstName: userData.firstName || '',
-        lastName: userData.lastName || '',
+        clerkId: userData.clerkId,
+        name: userData.name || '',
         email: userData.email,
-        username: userData.username || '',
-        imageUrl: userData.imageUrl || ''
+        image: userData.image || '',
+        plans: [],
+        collaboratingPlans: []
       });
       user = await newUser.save();
     }
-
+    
     return res.status(200).json({ success: true, user });
   } catch (error) {
     console.error("Error processing request:", error);
     return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Get current user information
+router.get('/me', async (req, res) => {
+  try {
+    const { clerkId } = req.body;
+    
+    if (!clerkId) {
+      return res.status(401).json({ error: 'Clerk ID is required' });
+    }
+    
+    const user = await User.findOne({ clerkId });
+    
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    
+    res.status(200).json({ success: true, data: user });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+});
+
+// Get pending invitations for the current user
+router.get('/invitations', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(401).json({ error: 'Email is required' });
+    }
+    
+    // Find plans with pending invitations for this email
+    const Plan = mongoose.model('Plan');
+    const plansWithInvites = await Plan.find({
+      'collaborators.email': email,
+      'collaborators.status': 'pending'
+    }).populate('user', 'name email');
+    
+    // Format the response to include only relevant invitation data
+    const pendingInvitations = plansWithInvites.map(plan => {
+      const invitation = plan.collaborators.find(
+        collab => collab.email === email && collab.status === 'pending'
+      );
+      
+      return {
+        planId: plan._id,
+        planName: plan.destination,
+        inviteToken: invitation.inviteToken,
+        inviteExpires: invitation.inviteExpires,
+        owner: {
+          name: plan.user.name,
+          email: plan.user.email
+        }
+      };
+    });
+    
+    res.status(200).json({ success: true, data: pendingInvitations });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
   }
 });
 

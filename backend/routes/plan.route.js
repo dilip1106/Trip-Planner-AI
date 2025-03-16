@@ -1,37 +1,46 @@
-// import express from "express";
-// import { getCommunityPlan, postPlan } from "../controllers/plan.controller.js";
-
-// const router = express.Router();
-
-// router.get("/:planId",getCommunityPlan);
-// router.put("/addPlan",postPlan);
-// router
-// export default router;
-
-// backend/routes/plan.route.js
+// backend/routes/plan.routes.js
 import express from 'express';
-// import { verifyToken } from '../middleware/verifyToken.js';
 import { 
-  generatePlan,
-  getUserPlans, 
+  createPlan, 
+  getAllPlans, 
   getPlanById, 
   updatePlan, 
   deletePlan, 
   getPublicPlans,
-  togglePlanVisibility
+  inviteCollaborator,
+  acceptCollaboratorInvite,
+  removeCollaborator,
+  generatePlan
 } from '../controllers/plan.controller.js';
+import { authenticateUser } from '../middleware/verifyAuthUser.js';
+import { requireAuth } from '../middleware/auth.js';
+// import { authenticateUser } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-// Protected routes (require authentication)
-router.post('/generate', generatePlan);
-router.get('/user', getUserPlans);
-router.get('/:id', getPlanById);
+// Apply authentication middleware to all plan routes
+// router.use(authenticateUser);
+
+// Plan CRUD operations
+router.post('/generate', authenticateUser,generatePlan)
+// router.post('/', createPlan);
+
+
+router.post('/',authenticateUser, getAllPlans);
+router.get('/public', getPublicPlans);
+
+router.post('/:id/view', authenticateUser, getPlanById);
+router.get('/:id',  getPlanById);
+
+
 router.put('/:id', updatePlan);
 router.delete('/:id', deletePlan);
-router.patch('/:id/toggle-visibility', togglePlanVisibility);
 
-// Public routes
-router.get('/public/all', getPublicPlans);
+// Collaboration routes
+router.post('/:id/collaborators',authenticateUser, inviteCollaborator);
+router.post('/invite/accept/:token',authenticateUser, acceptCollaboratorInvite);
+
+
+router.delete('/:id/collaborators/:userId', removeCollaborator);
 
 export default router;

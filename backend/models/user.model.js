@@ -1,29 +1,35 @@
+// backend/models/user.model.js
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
-  userId: {
+  clerkId: {
     type: String,
     required: true,
     unique: true
-  },
-  firstName: {
-    type: String,
-    required: true
-  },
-  lastName: {
-    type: String,
-    required: true
   },
   email: {
     type: String,
     required: true,
     unique: true
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
-  }
-});
+  name: {
+    type: String,
+    required: true
+  },
+  image: {
+    type: String
+  },
+  // Plans owned by this user
+  plans: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Plan'
+  }],
+  // Plans shared with this user
+  collaboratingPlans: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Plan'
+  }]
+}, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
 

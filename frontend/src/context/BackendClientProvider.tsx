@@ -22,15 +22,13 @@ function UserDataPersistence() {
 async function saveUserToDatabase(user: any) {
   try {
     const userData = {
-      clerkUserId: user.id,
+      clerkId: user.id,  // Changed from clerkUserId to match your schema
       email: user.primaryEmailAddress?.emailAddress,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      username: user.username || user.firstName, // Fallback if username is not available
-      // imageUrl: user.imageUrl,
-      // Add any other user fields you need
+      name: `${user.firstName} ${user.lastName}`.trim(), // Combine first and last name
+      image: user.imageUrl || "", // Added image field
+      // Plans and collaboratingPlans are handled on the server
     };
-
+    
     // Send data to your backend API using axios
     const response = await axios.post(
       `http://localhost:5000/api/auth/save-user`, 
@@ -38,8 +36,10 @@ async function saveUserToDatabase(user: any) {
     );
     
     console.log('User data saved successfully:', response.data);
+    return response.data;
   } catch (error) {
     console.error('Error saving user data:', error);
+    throw error;
   }
 }
 
