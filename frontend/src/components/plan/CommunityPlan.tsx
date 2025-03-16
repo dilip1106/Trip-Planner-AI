@@ -95,7 +95,8 @@ export default function CommunityPlan() {
         fromDate={undefined}
         toDate={undefined}
         placeName={plan?.nameoftheplace}
-        imageUrl={plan?.url}
+        // imageUrl={plan?.url}
+        destinationImage={plan?.destinationImage}
         isLoading={false}
         allowEdit={false}
         planId={planId}
@@ -105,7 +106,7 @@ export default function CommunityPlan() {
           isLoading={false}
           planId={planId}
           content={plan.aboutThePlace}
-          allowEdit={false}
+          allowEdit={true}
         />
       )}
       {plan.adventureActivities && (

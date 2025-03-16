@@ -4,6 +4,7 @@ import User from '../models/user.model.js';
 import { v4 as uuidv4 } from 'uuid';
 import sendMail from '../util/email.js';
 import * as GroqService from '../services/groq_service.js'; // Updated import to use Groq service
+import { generateDestinationImage } from '../services/image_service.js';
 
 // Create a new plan
 export const createPlan = async (req, res) => {
@@ -104,28 +105,48 @@ export const getPlanById = async (req, res) => {
 export const updatePlan = async (req, res) => {
   try {
     const { id } = req.params;
-    const { clerkId } = req.user;
+    const { clerkId } = req.user; // Now coming from middleware
     
     // Find the plan
     const plan = await Plan.findById(id);
     
     if (!plan) {
-      return res.status(404).json({ success: false, error: 'Plan not found' });
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Plan not found' 
+      });
     }
     
     // Check if user is the owner
     if (plan.clerkUserId !== clerkId) {
-      return res.status(403).json({ success: false, error: 'Only the owner can update this plan' });
+      // Check if user is a collaborator with edit permissions
+      const isCollaborator = plan.collaborators?.some(
+        collab => collab.clerkUserId === clerkId && collab.status === 'accepted'
+      );
+      
+      if (!isCollaborator) {
+        return res.status(403).json({ 
+          success: false, 
+          error: 'You do not have permission to update this plan' 
+        });
+      }
     }
     
+    // Update the plan with request body (userData already removed by middleware)
     const updatedPlan = await Plan.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true
     });
     
-    res.status(200).json({ success: true, data: updatedPlan });
+    res.status(200).json({ 
+      success: true, 
+      data: updatedPlan 
+    });
   } catch (error) {
-    res.status(400).json({ success: false, error: error.message });
+    res.status(400).json({ 
+      success: false, 
+      error: error.message 
+    });
   }
 };
 
@@ -409,12 +430,13 @@ export const removeCollaborator = async (req, res) => {
     res.status(400).json({ success: false, error: error.message });
   }
 };
-// Generate a new travel plan 
+
+
 export const generatePlan = async (req, res) => {
   try {
     const { destination, fromDate, toDate, activityPreferences, companion } = req.body;
     const { clerkId, email, name } = req.user; // Assuming middleware adds user info to req
-
+    
     if (!destination) {
       return res.status(400).json({ error: "Destination is required" });
     }
@@ -439,11 +461,12 @@ export const generatePlan = async (req, res) => {
       companion
     };
     
-    // Generate the three batches of data in parallel
-    const [basicInfo, activities, itineraryData] = await Promise.all([
+    // Generate data in parallel
+    const [basicInfo, activities, itineraryData, destinationImage] = await Promise.all([
       GroqService.generateBasicInfo(inputParams.userPrompt),
       GroqService.generateActivities(inputParams),
-      GroqService.generateItinerary(inputParams)
+      GroqService.generateItinerary(inputParams),
+      generateDestinationImage(destination) // Generate image in parallel
     ]);
     
     // Create a new plan in the database
@@ -451,8 +474,8 @@ export const generatePlan = async (req, res) => {
       user: user._id, // Link to MongoDB user ID
       clerkUserId: clerkId, // Also store Clerk ID directly in plan
       destination,
-      fromDate: new Date(fromDate),
-      toDate: new Date(toDate),
+      fromDate: fromDate ? new Date(fromDate) : undefined,
+      toDate: toDate ? new Date(toDate) : undefined,
       activityPreferences,
       companion,
       aboutThePlace: basicInfo.abouttheplace,
@@ -462,6 +485,7 @@ export const generatePlan = async (req, res) => {
       packingChecklist: activities.packingchecklist,
       itinerary: itineraryData.itinerary,
       topPlacesToVisit: itineraryData.topplacestovisit,
+      destinationImage: destinationImage, // Store the base64 encoded image
       isPublic: false,
       collaborators: [] // Initialize with empty collaborators array
     });

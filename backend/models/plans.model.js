@@ -1,4 +1,4 @@
-// backend/models/plans.model.js
+// backend/models/plan.model.js
 import mongoose from 'mongoose';
 
 const planSchema = new mongoose.Schema({
@@ -16,16 +16,13 @@ const planSchema = new mongoose.Schema({
     required: true
   },
   fromDate: {
-    type: Date,
-    required: true
+    type: Date
   },
   toDate: {
-    type: Date,
-    required: true
+    type: Date
   },
   activityPreferences: {
-    type: [String],
-    default: []
+    type: [String]
   },
   companion: {
     type: String
@@ -45,78 +42,52 @@ const planSchema = new mongoose.Schema({
   packingChecklist: {
     type: [String]
   },
-  itinerary: [
-    {
-      title: String,
-      activities: {
-        morning: [
-          {
-            itineraryItem: String,
-            briefDescription: String
-          }
-        ],
-        afternoon: [
-          {
-            itineraryItem: String,
-            briefDescription: String
-          }
-        ],
-        evening: [
-          {
-            itineraryItem: String,
-            briefDescription: String
-          }
-        ]
-      }
-    }
-  ],
-  topPlacesToVisit: [
-    {
-      name: String,
-      coordinates: {
-        lat: Number,
-        lng: Number
-      }
-    }
-  ],
+  itinerary: {
+    type: Array
+  },
+  topPlacesToVisit: {
+    type: Array
+  },
+  // Add image field
+  destinationImage: {
+    type: String, // Store base64 encoded image
+    default: ""
+  },
   isPublic: {
     type: Boolean,
     default: false
   },
-  // Collaborator information within the plan itself
   collaborators: [{
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     },
-    clerkUserId: {
-      type: String,
-      required: true
-    },
-    email: {
-      type: String,
-      required: true
-    },
-    name: {
-      type: String
-    },
+    clerkUserId: String,
+    email: String,
     status: {
       type: String,
-      enum: ['pending', 'accepted'],
+      enum: ['pending', 'accepted', 'rejected'],
       default: 'pending'
     },
-    inviteToken: {
-      type: String
-    },
-    inviteExpires: {
-      type: Date
-    },
-    addedAt: {
-      type: Date,
-      default: Date.now
-    }
-  }]
-}, { timestamps: true });
+    inviteToken: String,
+    inviteExpires: Date
+  }],
+  // Add timestamps
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+// Auto-update the updatedAt field
+planSchema.pre('save', function(next) {
+  this.updatedAt = Date.now();
+  next();
+});
 
 const Plan = mongoose.model('Plan', planSchema);
 

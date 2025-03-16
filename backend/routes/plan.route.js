@@ -33,7 +33,7 @@ router.post('/:id/view', authenticateUser, getPlanById);
 router.get('/:id',  getPlanById);
 
 
-router.put('/:id', updatePlan);
+router.put('/:id',authenticateUser, updatePlan);
 router.delete('/:id', deletePlan);
 
 // Collaboration routes

@@ -12,6 +12,7 @@ interface Plan {
   toDate?: string | null;
   nameoftheplace?: string;
   destination?: string;
+  destinationImage?: string;
 }
 
 interface PlanCardProps {
@@ -48,7 +49,7 @@ const PlanCard = ({ plan, isPublic = false }: PlanCardProps) => {
             <img
               role="figure"
               alt={`Travel destination: ${placeName}`}
-              src={plan.url ?? "/card-navigation.svg"}
+              src={`data:image/jpeg;base64,${plan.destinationImage}`}
               className="absolute inset-0 w-full h-full object-cover group-hover/card:scale-105 transition-transform duration-500 ease-in-out"
             />
             {plan.isSharedPlan && (

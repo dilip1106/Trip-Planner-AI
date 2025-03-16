@@ -1,9 +1,11 @@
 import SectionWrapper from "@/components/sections/SectionWrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Info } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EditText from "@/components/shared/EditText";
 import HeaderWithEditIcon from "@/components/shared/HeaderWithEditIcon";
+import { useAuth, useUser } from "@clerk/clerk-react";
+import axios from "axios";
 
 type AboutThePlaceProps = {
   content: string | undefined;
@@ -16,6 +18,29 @@ export default function AboutThePlace({ content, isLoading, planId, allowEdit }:
   const [editMode, setEditMode] = useState(false);
   const [aboutContent, setAboutContent] = useState(content);
   const [isUpdating, setIsUpdating] = useState(false);
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+
+  // Update local state when content prop changes
+  useEffect(() => {
+    setAboutContent(content);
+  }, [content]);
+
+  // Function to get user data for the backend
+  const getUserData = () => {
+    if (!isSignedIn || !user) return null;
+    
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
+    };
+  };
 
   const handleToggleEditMode = () => {
     setEditMode(!editMode);
@@ -24,20 +49,30 @@ export default function AboutThePlace({ content, isLoading, planId, allowEdit }:
   const updateAboutThePlaceContent = async (updatedContent: string) => {
     setIsUpdating(true);
     try {
-      const response = await fetch(`/api/plans/${planId}/about`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ abouttheplace: updatedContent.trim() }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update About the Place content.");
+      const userData = getUserData();
+      
+      if (!userData) {
+        throw new Error("Authentication required");
       }
+      
+      // Include userData in the request body as expected by your middleware
+      const response = await axios.put(
+        `http://localhost:5000/api/plan/${planId}`,
+        { 
+          userData,
+          aboutThePlace: updatedContent.trim()
+        }
+      );
 
-      setAboutContent(updatedContent.trim());
-      handleToggleEditMode();
+      if (response.data.success) {
+        setAboutContent(updatedContent.trim());
+        handleToggleEditMode();
+      } else {
+        throw new Error(response.data.error || "Failed to update About the Place content.");
+      }
     } catch (error) {
-      console.error(error);
+      console.error("Update error:", error);
+      // You might want to show an error message to the user here
     } finally {
       setIsUpdating(false);
     }
