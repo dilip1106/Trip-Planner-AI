@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { TrashIcon } from "lucide-react";
 import { useState } from "react";
@@ -13,38 +12,136 @@ import {
   AlertDialogFooter,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useMutation, QueryClient } from "react-query";
+import axios from "axios";
+import { useAuth, useUser } from "@clerk/clerk-react";
+import { toast } from "@/components/ui/use-toast";
 
 type ItineraryDayHeaderProps = {
   title: string;
   planId: string;
   allowEdit: boolean;
+  dayId?: string;
+  queryClient?: QueryClient;
 };
 
-export default function ItineraryDayHeader({ title, planId, allowEdit }: ItineraryDayHeaderProps) {
+export default function ItineraryDayHeader({ 
+  title, 
+  planId, 
+  allowEdit,
+  dayId,
+  queryClient 
+}: ItineraryDayHeaderProps) {
   const [open, setOpen] = useState(false);
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  
+  const getUserData = () => {
+    if (!isSignedIn || !user) return null;
+    
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
 
-  const deleteDayInItinerary = async () => {
-    try {
-      const response = await fetch(`/api/plans/${planId}/deleteDay`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ dayName: title }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete the day.");
-      }
-
-      // Handle successful deletion
-      // (e.g., update state or show a toast notification)
-      alert(`Successfully deleted ${title}`);
-    } catch (error) {
-      console.error("Error deleting the day:", error);
-      // Handle error (show an error message or toast notification)
-    }
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
+    };
   };
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      try {
+        const userData = getUserData();
+        
+        if (!userData) {
+          throw new Error("Authentication required");
+        }
+  
+        // First try to use the API that already exists in your codebase
+        try {
+          const response = await fetch(`/api/plans/${planId}/deleteDay`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ dayName: title }),
+          });
+          
+          if (response.ok) {
+            return await response.json();
+          }
+        } catch (err) {
+          console.log("Existing API failed, falling back to direct method");
+        }
+        
+        // Fallback to direct method if the API call fails
+        // First fetch existing itinerary
+        const existingResponse = await axios.post(`http://localhost:5000/api/plan/${planId}/view`, {
+          userData
+        });
+        const existingItinerary = existingResponse.data.data.itinerary || [];
+  
+        // Filter out the day to be deleted
+        // Either use day.id if available or filter by title
+        const updatedItinerary = existingItinerary.filter((day: any) => {
+          if (dayId) return day.id !== dayId;
+          return day.title !== title;
+        });
+  
+        const response = await axios.put(
+          `http://localhost:5000/api/plan/${planId}`,
+          {
+            userData,
+            itinerary: updatedItinerary
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+  
+        if (!response.data.success) {
+          throw new Error(response.data.error || "Failed to delete itinerary day");
+        }
+  
+        return { ...response.data.data, updatedItinerary };
+      } catch (error) {
+        console.error("Failed to delete itinerary day:", error);
+        throw error;
+      }
+    },
+    onSuccess: (data) => {
+      if (queryClient) {
+        // Update the cache with new data
+        queryClient.setQueryData(['plan', planId], (oldData: any) => {
+          if (!oldData) return { itinerary: data.updatedItinerary };
+          return {
+            ...oldData,
+            itinerary: data.updatedItinerary
+          };
+        });
+    
+        // Then invalidate to ensure consistency
+        queryClient.invalidateQueries(['plan', planId]);
+      }
+      
+      toast({
+        description: `Successfully deleted ${title}`,
+      });
+      
+      setOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        variant: "destructive",
+        description: error.message || `Failed to delete ${title}`,
+      });
+    }
+  });
 
   return (
     <div className="flex justify-between mb-2 text-lg font-bold leading-2 text-foreground ">
@@ -72,8 +169,11 @@ export default function ItineraryDayHeader({ title, planId, allowEdit }: Itinera
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={deleteDayInItinerary}>
-                Delete
+              <AlertDialogAction 
+                onClick={() => deleteMutation.mutate()}
+                disabled={deleteMutation.isLoading}
+              >
+                {deleteMutation.isLoading ? "Deleting..." : "Delete"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

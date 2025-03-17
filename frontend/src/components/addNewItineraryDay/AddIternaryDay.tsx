@@ -1,13 +1,17 @@
 "use client";
-import {useState} from "react";
-
-import {Button} from "@/components/ui/button";
-import {Dialog, DialogContent, DialogTrigger} from "@/components/ui/dialog";
-import {PlusCircleIcon} from "lucide-react";
-
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { PlusCircleIcon } from "lucide-react";
 import ItineraryDayForm from "@/components/addNewItineraryDay/ItineraryDayForm";
+import { QueryClient } from "react-query";
 
-export function AddIternaryDay({planId}: {planId: string}) {
+type AddIternaryDayProps = {
+  planId: string;
+  queryClient: QueryClient;
+};
+
+export function AddIternaryDay({ planId, queryClient }: AddIternaryDayProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -19,7 +23,11 @@ export function AddIternaryDay({planId}: {planId: string}) {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
-        <ItineraryDayForm planId={planId} setOpen={setOpen} />
+        <ItineraryDayForm 
+          planId={planId} 
+          setOpen={setOpen} 
+          queryClient={queryClient}
+        />
       </DialogContent>
     </Dialog>
   );

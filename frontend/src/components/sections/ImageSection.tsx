@@ -30,7 +30,7 @@ export default function ImageSection({
   planId,
 }: ImageSectionProps) {
   return (
-    <SectionWrapper id="imagination">y
+    <SectionWrapper id="imagination">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold">

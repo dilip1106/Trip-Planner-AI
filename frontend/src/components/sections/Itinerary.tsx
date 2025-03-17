@@ -5,34 +5,58 @@ import { AddIternaryDay } from "@/components/addNewItineraryDay/AddIternaryDay";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Navigation } from "lucide-react";
+import { useQuery, useQueryClient } from "react-query";
+import axios from "axios";
+import { useAuth, useUser } from "@clerk/clerk-react";
 
 type ItineraryProps = {
-  itinerary: Array<any> | undefined; // Replace with your specific data structure for itinerary
+  initialItinerary?: Array<any>;
   planId: string;
   isLoading: boolean;
   allowEdit: boolean;
 };
 
-const Itinerary = ({ itinerary, planId, isLoading, allowEdit }: ItineraryProps) => {
-  const [itineraryData, setItineraryData] = useState<Array<any> | undefined>(itinerary);
+const Itinerary = ({ initialItinerary, planId, isLoading: externalLoading, allowEdit }: ItineraryProps) => {
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const queryClient = useQueryClient();
+  
+  const getUserData = () => {
+    if (!isSignedIn || !user) return null;
+    
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
 
-  // You can use this to fetch itinerary data if you need to do that (e.g., from an API)
-  useEffect(() => {
-    if (!itinerary) {
-      // Fetch the itinerary data from your API if it's not passed as a prop
-      const fetchItineraryData = async () => {
-        try {
-          const response = await fetch(`/api/plans/${planId}/itinerary`);
-          const data = await response.json();
-          setItineraryData(data); // Assuming the API returns an array of itinerary data
-        } catch (error) {
-          console.error("Error fetching itinerary data:", error);
-        }
-      };
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
+    };
+  };
 
-      fetchItineraryData();
+  // Use React Query to fetch and cache itinerary data
+  const { data, isLoading: queryLoading } = useQuery(
+    ['plan', planId],
+    async () => {
+      const userData = getUserData();
+      if (!userData) throw new Error("Authentication required");
+      
+      const response = await axios.post(`http://localhost:5000/api/plan/${planId}/view`, {
+        userData
+      });
+      
+      return response.data.data;
+    },
+    {
+      initialData: initialItinerary ? { itinerary: initialItinerary } : undefined,
+      enabled: !!planId && isSignedIn
     }
-  }, [itinerary, planId]);
+  );
+
+  const isLoading = externalLoading || queryLoading;
+  const itineraryData = data?.itinerary;
 
   return (
     <SectionWrapper id="itinerary">
@@ -40,10 +64,20 @@ const Itinerary = ({ itinerary, planId, isLoading, allowEdit }: ItineraryProps) 
         <h2 className="text-lg font-semibold tracking-wide flex items-center">
           <Navigation className="mr-2" /> Itinerary
         </h2>
-        {allowEdit && !isLoading && <AddIternaryDay planId={planId} />}
+        {allowEdit && !isLoading && (
+          <AddIternaryDay 
+            planId={planId} 
+            queryClient={queryClient}
+          />
+        )}
       </div>
       {!isLoading ? (
-        <Timeline itinerary={itineraryData} planId={planId} allowEdit={allowEdit} />
+        <Timeline 
+          itinerary={itineraryData} 
+          planId={planId} 
+          allowEdit={allowEdit} 
+          queryClient={queryClient}
+        />
       ) : (
         <Skeleton className="w-full h-full" />
       )}

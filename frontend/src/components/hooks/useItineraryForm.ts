@@ -17,6 +17,7 @@ const useItineraryForm = (planId: string) => {
         register,
         control,
         getFieldState,
+        setValue,
         formState: { isValid, errors, isDirty },
     } = useZodForm({
         schema: ItineraryValidationSchema,
@@ -138,6 +139,7 @@ const useItineraryForm = (planId: string) => {
             isValid,
             errors,
             isDirty,
+            setValue,
         }
     )
 }

@@ -1,14 +1,16 @@
 import ItineraryDayHeader from "@/components/ItineraryDayHeader";
 import { Sun, Sunrise, Sunset } from "lucide-react";
 import { ReactNode, useState, useEffect } from "react";
+import { QueryClient } from "react-query";
 
 type TimelineProps = {
   itinerary: any[] | undefined; // Replace with your actual type
   planId: string;
   allowEdit: boolean;
+  queryClient?: QueryClient; // Make it optional to maintain compatibility
 };
 
-const Timeline = ({ itinerary, planId, allowEdit }: TimelineProps) => {
+const Timeline = ({ itinerary, planId, allowEdit, queryClient }: TimelineProps) => {
   const [filteredItinerary, setFilteredItinerary] = useState<any[]>([]);
 
   useEffect(() => {
@@ -23,6 +25,14 @@ const Timeline = ({ itinerary, planId, allowEdit }: TimelineProps) => {
       setFilteredItinerary(filtered);
     }
   }, [itinerary]);
+
+  // Function to handle day deletion if needed
+  const handleDeleteDay = (dayId: string) => {
+    if (window.confirm('Are you sure you want to delete this day?')) {
+      // Delete logic would go here
+      // You'd need to pass this function to your ItineraryDayHeader
+    }
+  };
 
   if (filteredItinerary.length === 0)
     return (
@@ -46,7 +56,13 @@ const Timeline = ({ itinerary, planId, allowEdit }: TimelineProps) => {
               <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z" />
             </svg>
           </span>
-          <ItineraryDayHeader planId={planId} title={day.title} allowEdit={allowEdit} />
+          <ItineraryDayHeader 
+            planId={planId} 
+            title={day.title} 
+            allowEdit={allowEdit}
+            dayId={day.id} // Make sure to pass the day ID if needed for deletion
+            queryClient={queryClient} // Pass queryClient if header needs access
+          />
           <div className="flex flex-col gap-5">
             <Activity
               activity={day.activities.morning}

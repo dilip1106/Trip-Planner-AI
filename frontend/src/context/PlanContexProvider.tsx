@@ -48,37 +48,13 @@ const PlanContextProvider = ({
 }) => {
   const [planState, setPlanState] = useState(defaultPlanState);
   const [plan, setPlan] = useState<PlanType | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [shouldShowAlert, setShouldShowAlert] = useState(false);
   const {planId} = useParams();
 
-  useEffect(() => {
-    async function fetchPlan() {
-      setIsLoading(true);
-      try {
-        const response = await fetch(`/api/plans/${planId}?public=${isPublic}`);
-        if (response.ok) {
-          const fetchedPlan = await response.json();
-          setPlan(fetchedPlan);
-          setPlanState(fetchedPlan.contentGenerationState || defaultPlanState);
-        } else {
-          console.error("Failed to fetch plan:", response.statusText);
-          setPlan(null);
-        }
-      } catch (error) {
-        console.error("Error fetching plan:", error);
-        setPlan(null);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchPlan();
-  }, [planId, isPublic]);
-
   return (
     <PlanContext.Provider value={{ planState, setPlanState, shouldShowAlert, plan, isLoading }}>
-      {isLoading ? <div>Loading...</div> : plan ? children : children}
+      {children}
     </PlanContext.Provider>
   );
 };

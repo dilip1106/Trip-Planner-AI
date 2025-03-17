@@ -503,3 +503,64 @@ export const generatePlan = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+export const generateEmptyPlan = async (req, res) => {
+  try {
+    const { destination, fromDate, toDate, activityPreferences, companion } = req.body;
+    const { clerkId, email, name } = req.user; // Assuming middleware adds user info to req
+    
+    if (!destination) {
+      return res.status(400).json({ error: "Destination is required" });
+    }
+    
+    // Find or create user in our database
+    let user = await User.findOne({ clerkId });
+    if (!user) {
+      user = await User.create({
+        clerkId,
+        email,
+        name,
+        image: req.user.image || ''
+      });
+    }
+    
+    // Generate only the destination image
+    const destinationImage = await generateDestinationImage(destination);
+    
+    // Create a new empty plan in the database but with the generated image
+    const newPlan = new Plan({
+      user: user._id, // Link to MongoDB user ID
+      clerkUserId: clerkId, // Also store Clerk ID directly in plan
+      destination,
+      fromDate: fromDate ? new Date(fromDate) : undefined,
+      toDate: toDate ? new Date(toDate) : undefined,
+      activityPreferences: activityPreferences || [],
+      companion: companion || "",
+      aboutThePlace: "",
+      bestTimeToVisit: "",
+      adventureActivities: [],
+      localCuisine: [],
+      packingChecklist: [],
+      itinerary: [],
+      topPlacesToVisit: [],
+      destinationImage: destinationImage, // Store the generated image
+      isPublic: false,
+      collaborators: [], // Initialize with empty collaborators array
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: "draft" // Adding a status field to indicate this is a draft plan
+    });
+    
+    const savedPlan = await newPlan.save();
+    
+    // Add plan to user's plans array
+    await User.findByIdAndUpdate(user._id, {
+      $push: { plans: savedPlan._id }
+    });
+    
+    res.status(201).json(savedPlan);
+  } catch (error) {
+    console.error("Error generating empty plan with image:", error);
+    res.status(500).json({ error: error.message });
+  }
+};

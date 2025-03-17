@@ -89,73 +89,73 @@ export default function CommunityPlan() {
   return (
     <section className="h-full flex flex-col gap-10">
       <ImageSection
-        userPrompt={plan?.userPrompt}
-        companion={undefined}
-        activityPreferences={[]}
-        fromDate={undefined}
-        toDate={undefined}
-        placeName={plan?.nameoftheplace}
-        // imageUrl={plan?.url}
-        destinationImage={plan?.destinationImage}
-        isLoading={false}
-        allowEdit={false}
-        planId={planId}
+      userPrompt={plan?.userPrompt}
+      companion={undefined}
+      activityPreferences={[]}
+      fromDate={undefined}
+      toDate={undefined}
+      placeName={plan?.nameoftheplace}
+      destinationImage={plan?.destinationImage}
+      isLoading={false}
+      allowEdit={false}
+      planId={planId}
       />
-      {plan.aboutThePlace && (
+      {/* {plan.aboutThePlace && (
+      
+      )} */}
       <AboutThePlace
-          isLoading={false}
-          planId={planId}
-          content={plan.aboutThePlace}
-          allowEdit={true}
-        />
-      )}
+        isLoading={false}
+        planId={planId}
+        content={plan.aboutThePlace}
+        allowEdit={true}
+      />
       {plan.adventureActivities && (
-        <TopActivities
-          activities={plan.adventureActivities}
-          planId={planId}
-          isLoading={false}
-          allowEdit={true}
-        />
+      <TopActivities
+        activities={plan.adventureActivities}
+        planId={planId}
+        isLoading={false}
+        allowEdit={true}
+      />
       )}
       {plan.topPlacesToVisit && (
-        <TopPlacesToVisit
-          topPlacesToVisit={plan.topPlacesToVisit}
-          planId={planId}
-          isLoading={false}
-          allowEdit={true}
-        />
+      <TopPlacesToVisit
+        topPlacesToVisit={plan.topPlacesToVisit}
+        planId={planId}
+        isLoading={false}
+        allowEdit={true}
+      />
       )}
       {plan.itinerary && (
-        <Itinerary
-          itinerary={plan.itinerary}
-          planId={planId}
-          isLoading={false}
-          allowEdit={true}
-        />
+      <Itinerary
+        initialItinerary={plan.itinerary}
+        planId={planId}
+        isLoading={false}
+        allowEdit={true}
+      />
       )}
       {plan.localCuisine && (
-        <LocalCuisineRecommendations
-          recommendations={plan.localCuisine}
-          isLoading={false}
-          planId={planId}
-          allowEdit={true}
-        />
+      <LocalCuisineRecommendations
+        recommendations={plan.localCuisine}
+        isLoading={false}
+        planId={planId}
+        allowEdit={true}
+      />
       )}
       {plan.packingChecklist && (
-        <PackingChecklist
-          checklist={plan.packingChecklist}
-          isLoading={false}
-          planId={planId}
-          allowEdit={true}
-        />
+      <PackingChecklist
+        checklist={plan.packingChecklist}
+        isLoading={false}
+        planId={planId}
+        allowEdit={true}
+      />
       )}
       {plan.bestTimeToVisit && (
-        <BestTimeToVisit
-          content={plan.bestTimeToVisit}
-          planId={planId}
-          isLoading={false}
-          allowEdit={true}
-        />
+      <BestTimeToVisit
+        content={plan.bestTimeToVisit}
+        planId={planId}
+        isLoading={false}
+        allowEdit={true}
+      />
       )}
     </section>
   );

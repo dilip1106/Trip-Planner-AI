@@ -10,7 +10,8 @@ import {
   inviteCollaborator,
   acceptCollaboratorInvite,
   removeCollaborator,
-  generatePlan
+  generatePlan,
+  generateEmptyPlan
 } from '../controllers/plan.controller.js';
 import { authenticateUser } from '../middleware/verifyAuthUser.js';
 // import { authenticateUser } from '../middleware/auth.middleware.js';
@@ -21,7 +22,8 @@ const router = express.Router();
 // router.use(authenticateUser);
 
 // Plan CRUD operations
-router.post('/generate', authenticateUser,generatePlan)
+router.post('/empty', authenticateUser, generateEmptyPlan);
+router.post('/generate', authenticateUser,generatePlan);
 // router.post('/', createPlan);
 
 
