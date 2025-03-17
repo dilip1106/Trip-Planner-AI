@@ -114,7 +114,7 @@ export default function CommunityPlan() {
           activities={plan.adventureActivities}
           planId={planId}
           isLoading={false}
-          allowEdit={false}
+          allowEdit={true}
         />
       )}
       {plan.topPlacesToVisit && (
@@ -122,7 +122,7 @@ export default function CommunityPlan() {
           topPlacesToVisit={plan.topPlacesToVisit}
           planId={planId}
           isLoading={false}
-          allowEdit={false}
+          allowEdit={true}
         />
       )}
       {plan.itinerary && (
@@ -130,7 +130,7 @@ export default function CommunityPlan() {
           itinerary={plan.itinerary}
           planId={planId}
           isLoading={false}
-          allowEdit={false}
+          allowEdit={true}
         />
       )}
       {plan.localCuisine && (
@@ -138,7 +138,7 @@ export default function CommunityPlan() {
           recommendations={plan.localCuisine}
           isLoading={false}
           planId={planId}
-          allowEdit={false}
+          allowEdit={true}
         />
       )}
       {plan.packingChecklist && (
@@ -146,7 +146,7 @@ export default function CommunityPlan() {
           checklist={plan.packingChecklist}
           isLoading={false}
           planId={planId}
-          allowEdit={false}
+          allowEdit={true}
         />
       )}
       {plan.bestTimeToVisit && (
@@ -154,7 +154,7 @@ export default function CommunityPlan() {
           content={plan.bestTimeToVisit}
           planId={planId}
           isLoading={false}
-          allowEdit={false}
+          allowEdit={true}
         />
       )}
     </section>

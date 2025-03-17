@@ -1,10 +1,13 @@
+import { useState } from "react";
 import SectionWrapper from "@/components/sections/SectionWrapper";
 import EditList from "@/components/shared/EditList";
 import HeaderWithEditIcon from "@/components/shared/HeaderWithEditIcon";
 import List from "@/components/shared/List";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Utensils } from "lucide-react";
-import { useState } from "react";
+import { useAuth, useUser } from "@clerk/clerk-react";
+import axios from "axios";
+import { toast } from "@/components/ui/use-toast";
 
 type LocalCuisineRecommendationsProps = {
   recommendations: string[] | undefined;
@@ -20,33 +23,70 @@ export default function LocalCuisineRecommendations({
   allowEdit,
 }: LocalCuisineRecommendationsProps) {
   const [editMode, setEditMode] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [localRecommendations, setLocalRecommendations] = useState<string[]>(recommendations || []);
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
 
-  const handleToggleEditMode = () => {
-    setEditMode(!editMode);
+  // Function to get user data for the backend
+  const getUserData = () => {
+    if (!isSignedIn || !user) return null;
+    
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
+    };
   };
 
   const updateLocalCuisines = async (updatedArray: string[]) => {
+    setIsUpdating(true);
     try {
-      const response = await fetch(`/api/updateLocalCuisines`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          planId,
-          data: updatedArray,
-          key: "localcuisinerecommendations",
-        }),
-      });
-
-      if (response.ok) {
-        handleToggleEditMode();
-      } else {
-        console.error("Failed to update local cuisine recommendations");
+      const userData = getUserData();
+      
+      if (!userData) {
+        throw new Error("Authentication required");
       }
+
+      const response = await axios.put(
+        `http://localhost:5000/api/plan/${planId}`,
+        {
+          userData,
+          localCuisine: updatedArray
+        }
+      );
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || "Failed to update recommendations");
+      }
+
+      // Update local state after successful API call
+      setLocalRecommendations(updatedArray);
+      
+      toast({
+        description: "Recommendations updated successfully!",
+      });
+      handleToggleEditMode();
     } catch (error) {
-      console.error("Error updating local cuisine recommendations:", error);
+      console.error("Failed to update recommendations:", error);
+      toast({
+        variant: "destructive",
+        description: "Failed to update recommendations. Please try again.",
+      });
+      // Revert local state in case of error
+      setLocalRecommendations(recommendations || []);
+    } finally {
+      setIsUpdating(false);
     }
+  };
+
+  const handleToggleEditMode = () => {
+    setEditMode(!editMode);
   };
 
   return (
@@ -54,22 +94,22 @@ export default function LocalCuisineRecommendations({
       <HeaderWithEditIcon
         shouldShowEditIcon={!editMode && allowEdit}
         handleToggleEditMode={handleToggleEditMode}
-        hasData={recommendations != null && recommendations.length != 0}
+        hasData={localRecommendations != null && localRecommendations.length !== 0}
         icon={<Utensils className="mr-2" />}
         title="Local Cuisine Recommendations"
-        isLoading={isLoading}
+        isLoading={isLoading || isUpdating}
       />
 
-      {!isLoading && recommendations ? (
+      {!isLoading && localRecommendations ? (
         <div className="ml-8">
           {editMode ? (
             <EditList
-              arrayData={recommendations}
+              arrayData={localRecommendations}
               handleToggleEditMode={handleToggleEditMode}
               updateData={updateLocalCuisines}
             />
           ) : (
-            <List list={recommendations} />
+            <List list={localRecommendations} />
           )}
         </div>
       ) : (

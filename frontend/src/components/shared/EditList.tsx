@@ -67,9 +67,18 @@ const EditList = ({arrayData, handleToggleEditMode, updateData}: EditListProps) 
 
   const isSubmittable = !!isDirty && !!isValid;
 
-  const onSaveEditList = (data: {items: ItemType[]}) => {
-    const updatedArray = data.items.map((item) => item.text);
-    updateData(updatedArray);
+  const onSaveEditList = async (data: {items: ItemType[]}) => {
+    try {
+      const updatedArray = data.items.map((item) => item.text);
+      // Call the updateData function and wait for it to complete
+      await updateData(updatedArray);
+      
+      // If we get here, the update was successful
+      handleToggleEditMode();
+    } catch (error) {
+      console.error("Failed to save changes:", error);
+      // The parent component will handle showing error messages
+    }
   };
 
   return (
@@ -110,14 +119,29 @@ const EditList = ({arrayData, handleToggleEditMode, updateData}: EditListProps) 
         })}
 
         <div className="flex justify-between gap-2 mt-5 w-[90%]">
-          <Button onClick={addNewControl} variant="outline" className="text-center">
+          <Button 
+            onClick={addNewControl} 
+            type="button" 
+            variant="outline" 
+            className="text-center"
+          >
             <Plus /> Add New Item
           </Button>
           <div className="flex gap-2 justify-between">
-            <Button disabled={!isSubmittable} size="sm" variant="outline">
+            <Button 
+              type="submit"
+              disabled={!isSubmittable} 
+              size="sm" 
+              variant="outline"
+            >
               Save
             </Button>
-            <Button onClick={handleToggleEditMode} size="sm" variant="outline">
+            <Button 
+              type="button"
+              onClick={handleToggleEditMode} 
+              size="sm" 
+              variant="outline"
+            >
               Cancel
             </Button>
           </div>

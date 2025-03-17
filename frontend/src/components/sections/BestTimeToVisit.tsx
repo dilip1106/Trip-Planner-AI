@@ -1,9 +1,12 @@
+import { useState, useEffect } from "react";
 import SectionWrapper from "@/components/sections/SectionWrapper";
 import EditText from "@/components/shared/EditText";
 import HeaderWithEditIcon from "@/components/shared/HeaderWithEditIcon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Clock3 } from "lucide-react";
-import { useState } from "react";
+import { useAuth, useUser } from "@clerk/clerk-react";
+import axios from "axios";
+import { toast } from "@/components/ui/use-toast";
 
 type BestTimeToVisitProps = {
   content: string | undefined;
@@ -19,15 +22,75 @@ export default function BestTimeToVisit({
   allowEdit,
 }: BestTimeToVisitProps) {
   const [editMode, setEditMode] = useState(false);
-  const [localContent, setLocalContent] = useState(content || ""); // Use local state for content
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [localContent, setLocalContent] = useState(content || "");
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+
+  useEffect(() => {
+    if (content) {
+      setLocalContent(content);
+    }
+  }, [content]);
+
+  const getUserData = () => {
+    if (!isSignedIn || !user) return null;
+    
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
+    };
+  };
 
   const handleToggleEditMode = () => {
     setEditMode(!editMode);
   };
 
-  const updateBestTimeToVisitContent = (updatedContent: string) => {
-    setLocalContent(updatedContent.trim()); // Update local state
-    handleToggleEditMode(); // Exit edit mode
+  const updateBestTimeToVisitContent = async (updatedContent: string) => {
+    setIsUpdating(true);
+    try {
+      const userData = getUserData();
+      
+      if (!userData) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await axios.put(
+        `http://localhost:5000/api/plan/${planId}`,
+        {
+          userData,
+          bestTimeToVisit: updatedContent.trim()
+        }
+      );
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || "Failed to update content");
+      }
+
+      // Update local state after successful API call
+      setLocalContent(updatedContent.trim());
+      
+      toast({
+        description: "Best time to visit updated successfully!",
+      });
+      handleToggleEditMode();
+    } catch (error) {
+      console.error("Failed to update best time to visit:", error);
+      toast({
+        variant: "destructive",
+        description: "Failed to update. Please try again.",
+      });
+      // Revert local state in case of error
+      setLocalContent(content || "");
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   return (
@@ -38,7 +101,7 @@ export default function BestTimeToVisit({
         hasData={typeof localContent === "string" && localContent.length > 0}
         icon={<Clock3 className="mr-2" />}
         title="Best Time To Visit"
-        isLoading={isLoading}
+        isLoading={isLoading || isUpdating}
       />
       <div className="ml-8">
         {!isLoading ? (

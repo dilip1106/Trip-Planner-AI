@@ -1,11 +1,13 @@
+import { useState, useEffect } from "react";
 import SectionWrapper from "@/components/sections/SectionWrapper";
 import EditList from "@/components/shared/EditList";
 import HeaderWithEditIcon from "@/components/shared/HeaderWithEditIcon";
 import List from "@/components/shared/List";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Backpack } from "lucide-react";
-import { useState } from "react";
-import axios from "axios"; // Axios for backend communication
+import { useAuth, useUser } from "@clerk/clerk-react";
+import axios from "axios";
+import { toast } from "@/components/ui/use-toast";
 
 type PackingChecklistProps = {
   checklist: string[] | undefined;
@@ -21,20 +23,74 @@ export default function PackingChecklist({
   allowEdit,
 }: PackingChecklistProps) {
   const [editMode, setEditMode] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [localChecklist, setLocalChecklist] = useState<string[]>(checklist || []);
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+
+  useEffect(() => {
+    if (checklist) {
+      setLocalChecklist(checklist);
+    }
+  }, [checklist]);
+
+  const getUserData = () => {
+    if (!isSignedIn || !user) return null;
+    
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
+    };
+  };
 
   const handleToggleEditMode = () => {
     setEditMode(!editMode);
   };
 
   const updateChecklist = async (updatedArray: string[]) => {
+    setIsUpdating(true);
     try {
-      await axios.put(`/api/plans/${planId}`, {
-        key: "packingchecklist",
-        data: updatedArray,
+      const userData = getUserData();
+      
+      if (!userData) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await axios.put(
+        `http://localhost:5000/api/plan/${planId}`,
+        {
+          userData,
+          packingChecklist: updatedArray
+        }
+      );
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || "Failed to update checklist");
+      }
+
+      // Update local state after successful API call
+      setLocalChecklist(updatedArray);
+      
+      toast({
+        description: "Checklist updated successfully!",
       });
       handleToggleEditMode();
     } catch (error) {
-      console.error("Error updating packing checklist:", error);
+      console.error("Failed to update checklist:", error);
+      toast({
+        variant: "destructive",
+        description: "Failed to update checklist. Please try again.",
+      });
+      // Revert local state in case of error
+      setLocalChecklist(checklist || []);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -43,22 +99,22 @@ export default function PackingChecklist({
       <HeaderWithEditIcon
         shouldShowEditIcon={!editMode && allowEdit}
         handleToggleEditMode={handleToggleEditMode}
-        hasData={checklist != null && checklist.length !== 0}
+        hasData={localChecklist != null && localChecklist.length !== 0}
         icon={<Backpack className="mr-2" />}
         title="Packing Checklist"
-        isLoading={isLoading}
+        isLoading={isLoading || isUpdating}
       />
 
-      {!isLoading && checklist ? (
+      {!isLoading && localChecklist ? (
         <div className="ml-8">
           {editMode ? (
             <EditList
-              arrayData={checklist}
+              arrayData={localChecklist}
               handleToggleEditMode={handleToggleEditMode}
               updateData={updateChecklist}
             />
           ) : (
-            <List list={checklist} />
+            <List list={localChecklist} />
           )}
         </div>
       ) : (

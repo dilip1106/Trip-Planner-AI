@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import SectionWrapper from "@/components/sections/SectionWrapper";
 import EditList from "@/components/shared/EditList";
 import HeaderWithEditIcon from "@/components/shared/HeaderWithEditIcon";
 import List from "@/components/shared/List";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sailboat } from "lucide-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
+import axios from "axios";
+import { toast } from "@/components/ui/use-toast";
 
 type TopActivitiesProps = {
   activities: string[] | undefined;
@@ -20,17 +23,94 @@ export default function TopActivities({
   allowEdit,
 }: TopActivitiesProps) {
   const [editMode, setEditMode] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [localActivities, setLocalActivities] = useState<string[]>(activities || []);
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
 
-  // Mock update function to simulate API call
-  const updateActivitiesToDo = (updatedArray: string[]) => {
-    console.log("Updated activities:", updatedArray);
-    console.log("Plan ID:", planId);
-    console.log("Key: adventuresactivitiestodo");
+  useEffect(() => {
+    if (activities) {
+      setLocalActivities(activities);
+    }
+  }, [activities]);
 
-    // Simulate API delay
-    setTimeout(() => {
+  // Function to get user data for the backend
+  const getUserData = () => {
+    if (!isSignedIn || !user) return null;
+    
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
+    };
+  };
+
+  const updateActivitiesToDo = async (updatedArray: string[]) => {
+    setIsUpdating(true);
+    try {
+      const userData = getUserData();
+      
+      if (!userData) {
+        throw new Error("Authentication required");
+      }
+
+      // console.log("Sending update to backend:", {
+      //   endpoint: `http://localhost:5000/api/plan/${planId}`,
+      //   payload: {
+      //     userData,
+      //     activitiesToDo: updatedArray,
+      //     planId: planId
+      //   }
+      // });
+
+      // First update the database
+      const response = await axios.put(
+        `http://localhost:5000/api/plan/${planId}`,
+        {
+          userData,
+          
+          adventureActivities: updatedArray,
+          
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log("Backend response:", response.data);
+
+      if (!response.data.success) {
+        throw new Error(response.data.error || "Failed to update activities");
+      }
+
+      // If database update is successful, update local state
+      setLocalActivities(updatedArray);
+      
+      toast({
+        description: "Activities updated successfully!",
+      });
       handleToggleEditMode();
-    }, 1000);
+
+      return response.data;
+    } catch (error) {
+      console.error("Failed to update activities:", error);
+      toast({
+        variant: "destructive",
+        description: "Failed to update activities. Please try again.",
+      });
+      // Revert local state in case of error
+      setLocalActivities(activities || []);
+      throw error;
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const handleToggleEditMode = () => {
@@ -42,21 +122,21 @@ export default function TopActivities({
       <HeaderWithEditIcon
         shouldShowEditIcon={!editMode && allowEdit}
         handleToggleEditMode={handleToggleEditMode}
-        hasData={activities != null && activities.length !== 0}
+        hasData={localActivities != null && localActivities.length !== 0}
         icon={<Sailboat className="mr-2" />}
         title="Top activities to look for"
-        isLoading={isLoading}
+        isLoading={isLoading || isUpdating}
       />
-      {!isLoading && activities ? (
+      {!isLoading ? (
         <div className="ml-8">
           {editMode ? (
             <EditList
-              arrayData={activities}
+              arrayData={localActivities}
               handleToggleEditMode={handleToggleEditMode}
               updateData={updateActivitiesToDo}
             />
           ) : (
-            <List list={activities} />
+            <List list={localActivities} />
           )}
         </div>
       ) : (
