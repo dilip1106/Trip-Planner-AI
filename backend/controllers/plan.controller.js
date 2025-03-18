@@ -5,7 +5,9 @@ import { v4 as uuidv4 } from 'uuid';
 import sendMail from '../util/email.js';
 import * as GroqService from '../services/groq_service.js'; // Updated import to use Groq service
 import { generateDestinationImage } from '../services/image_service.js';
-
+import axios from 'axios';
+import dotenv from 'dotenv';
+dotenv.config();
 // Create a new plan
 export const createPlan = async (req, res) => {
   try {
@@ -430,8 +432,133 @@ export const removeCollaborator = async (req, res) => {
     res.status(400).json({ success: false, error: error.message });
   }
 };
-
-
+export const revokeInvite = async (req, res) => {
+  try {
+    const { planId, id } = req.params;
+    const { clerkId } = req.user;
+    
+    // Find the plan
+    const plan = await Plan.findById(planId);
+    
+    if (!plan) {
+      return res.status(404).json({ success: false, error: 'Plan not found' });
+    }
+    
+    // Check if user is the owner
+    if (plan.clerkUserId !== clerkId) {
+      return res.status(403).json({
+        success: false,
+        error: 'Only the owner can revoke invitations'
+      });
+    }
+    
+    // Find the collaborator in the plan by MongoDB _id
+    const collaboratorIndex = plan.collaborators.findIndex(
+      collab => collab._id.toString() === id
+    );
+    
+    if (collaboratorIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'Invitation not found'
+      });
+    }
+    
+    // Check if the collaborator status is 'pending'
+    if (plan.collaborators[collaboratorIndex].status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        error: 'Can only revoke pending invitations'
+      });
+    }
+    
+    // Get the collaborator email for the response
+    const collaboratorEmail = plan.collaborators[collaboratorIndex].email;
+    
+    // Remove the collaborator
+    plan.collaborators.splice(collaboratorIndex, 1);
+    await plan.save();
+    
+    res.status(200).json({
+      success: true,
+      message: `Invitation to ${collaboratorEmail} revoked successfully`
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+// Get all pending invitations for a plan
+export const getPlanInvites = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { clerkId } = req.user;
+    
+    // Find the plan
+    const plan = await Plan.findById(id);
+    
+    if (!plan) {
+      return res.status(404).json({ success: false, error: 'Plan not found' });
+    }
+    
+    // Check if user is the owner
+    if (plan.clerkUserId !== clerkId) {
+      return res.status(403).json({ success: false, error: 'Only the owner can view invitations' });
+    }
+    
+    // Filter only pending invitations
+    const pendingInvites = plan.collaborators.filter(
+      collab => collab.status === 'pending'
+    ).map(invite => ({
+      id: invite._id,
+      email: invite.email,
+      inviteSent: invite.createdAt || new Date(), // Use createdAt if available, or current date
+      inviteExpires: invite.inviteExpires
+    }));
+    
+    res.status(200).json({
+      success: true,
+      invites: pendingInvites
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+export const getAcceptedInvites = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { clerkId } = req.user;
+    
+    // Find the plan
+    const plan = await Plan.findById(id);
+    
+    if (!plan) {
+      return res.status(404).json({ success: false, error: 'Plan not found' });
+    }
+    
+    // Check if user is the owner
+    if (plan.clerkUserId !== clerkId) {
+      return res.status(403).json({ success: false, error: 'Only the owner can view collaborators' });
+    }
+    
+    // Filter only accepted invitations
+    const acceptedInvites = plan.collaborators.filter(
+      collab => collab.status === 'accepted'
+    ).map(invite => ({
+      id: invite._id,
+      email: invite.email,
+      userId: invite.userId,
+      clerkUserId: invite.clerkUserId,
+      acceptedAt: invite.updatedAt || invite.createdAt // Use updatedAt if available, or fallback to createdAt
+    }));
+    
+    res.status(200).json({
+      success: true,
+      acceptedInvites: acceptedInvites
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
 export const generatePlan = async (req, res) => {
   try {
     const { destination, fromDate, toDate, activityPreferences, companion } = req.body;
@@ -562,5 +689,43 @@ export const generateEmptyPlan = async (req, res) => {
   } catch (error) {
     console.error("Error generating empty plan with image:", error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+
+
+
+
+export const getWeather = async (req, res) => {
+  try {
+    const { placeName } = req.query;
+
+    if (!placeName) {
+      return res.status(400).json({ error: 'Place name is required' });
+    }
+
+    const API_KEY = process.env.OPENWEATHER_API_KEY;
+
+    if (!API_KEY) {
+      return res.status(500).json({ error: 'API key not configured' });
+    }
+
+    const response = await axios.get(
+      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(placeName)}&appid=${API_KEY}`
+    );
+
+    return res.json(response.data);
+  } catch (error) {
+    if (error.response) {
+      return res.status(error.response.status).json({ 
+        error: error.response.data.message || 'Failed to fetch weather data' 
+      });
+    }
+    
+    if (error.code === 'ECONNREFUSED') {
+      return res.status(502).json({ error: 'Weather API service is unavailable' });
+    }
+
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };

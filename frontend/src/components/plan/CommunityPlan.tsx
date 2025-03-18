@@ -10,6 +10,7 @@ import PackingChecklist from "../sections/PackingChecklist";
 import BestTimeToVisit from "../sections/BestTimeToVisit";
 import ImageSection from "../sections/ImageSection";
 import axios, { AxiosError } from "axios";
+import Weather from "../sections/Weather";
 
 export default function CommunityPlan() {
   const [plan, setPlan] = useState<any>(null);
@@ -94,7 +95,7 @@ export default function CommunityPlan() {
       activityPreferences={[]}
       fromDate={undefined}
       toDate={undefined}
-      placeName={plan?.nameoftheplace}
+      placeName={plan?.destination}
       destinationImage={plan?.destinationImage}
       isLoading={false}
       allowEdit={false}
@@ -109,6 +110,8 @@ export default function CommunityPlan() {
         content={plan.aboutThePlace}
         allowEdit={true}
       />
+
+      <Weather placeName={plan.destination} />
       {plan.adventureActivities && (
       <TopActivities
         activities={plan.adventureActivities}

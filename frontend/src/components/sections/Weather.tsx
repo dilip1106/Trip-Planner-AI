@@ -1,4 +1,4 @@
-"use client";
+import React, { ReactNode, useEffect, useState } from "react";
 import SectionWrapper from "@/components/sections/SectionWrapper";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,102 +15,146 @@ import {
   Waves,
   Wind,
 } from "lucide-react";
-// import Image from "next/image";
-import { CurrentWeatherResponse } from "@/lib/types/WeatherResponse";
-import { ReactNode, useEffect, useState } from "react";
+
+// Define the weather response type to match the actual API response
+interface CurrentWeatherResponse {
+  coord: {
+    lon: number;
+    lat: number;
+  };
+  weather: {
+    id: number;
+    main: string;
+    description: string;
+    icon: string;
+  }[];
+  base: string;
+  main: {
+    temp: number;
+    feels_like: number;
+    temp_min: number;
+    temp_max: number;
+    pressure: number;
+    humidity: number;
+    sea_level?: number;
+    grnd_level?: number;
+  };
+  visibility: number;
+  wind: {
+    speed: number;
+    deg: number;
+  };
+  clouds: {
+    all: number;
+  };
+  dt: number;
+  sys: {
+    type: number;
+    id: number;
+    country: string;
+    sunrise: number;
+    sunset: number;
+  };
+  timezone: number;
+  id: number;
+  name: string;
+  cod: number;
+}
 
 const Weather = ({ placeName }: { placeName: string | undefined }) => {
   const { setPlanState } = usePlanContext();
-  const [weatherData, setWeatherData] = useState<CurrentWeatherResponse | undefined>(undefined);
-  const mockWeatherData = {
-    cod: 200,
-    name: "Mumbai",
-    weather: [
-      {
-        description: "clear sky",
-        icon: "01d"
-      }
-    ],
-    main: {
-      temp: 303.15,
-      feels_like: 306.15,
-      temp_min: 301.15,
-      temp_max: 305.15,
-      pressure: 1012,
-      humidity: 78,
-      sea_level: 1012
-    },
-    wind: {
-      speed: 5.14,
-      deg: 210
-    },
-    visibility: 10000
-  };
+  const [weatherData, setWeatherData] = useState<CurrentWeatherResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  // Replace your API data with this mock data during testing
-  
+  // Update this URL to match your Express backend URL
+  const API_BASE_URL = 'http://localhost:5000';
   
   const getWeather = async (placeName: string) => {
     try {
-      const response = await fetch(`/api/weather?placeName=${placeName}`); // Replace with your backend endpoint
-      if (!response.ok) throw new Error("Failed to fetch weather data");
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/api/plan/weather?placeName=${placeName}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to fetch weather data");
+      }
+      
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error(error);
-      return null;
+      if (error instanceof Error) {
+        throw new Error(error.message);
+      }
+      throw new Error("An unknown error occurred");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (!placeName) return;
+    if (!placeName) {
+      setWeatherData(null);
+      setError(null);
+      return;
+    }
+    
     getWeather(placeName)
       .then((data) => {
-        if (data) {
-          setWeatherData(data);
-        }
+        setWeatherData(data);
+        setPlanState((state) => ({ ...state, weather: true }));
       })
       .catch((e) => {
         console.error(e);
-        setWeatherData(undefined);
-      })
-      .finally(() => setPlanState((state) => ({ ...state, weather: true })));
-  }, [placeName]);
+        setError(`Error: ${e.message}`);
+        setWeatherData(null);
+      });
+  }, [placeName, setPlanState]);
 
   return (
     <SectionWrapper id="weather">
       <h2 className="mb-2 text-lg font-semibold tracking-wide flex items-center">
         <Cloud className="mr-2" /> Weather
       </h2>
-      {(
+      
+      {loading ? (
+        <WeatherLoadingSkeleton />
+      ) : error ? (
+        <div className="p-4 rounded-lg bg-red-50 dark:bg-red-900/20">
+          <p className="text-red-500 dark:text-red-400">Error loading weather information for {placeName}: {error}</p>
+        </div>
+      ) : !placeName ? (
+        <p className="ml-8 text-muted-foreground">Please enter a location to see weather information</p>
+      ) : weatherData ? (
         <div className="grid md:grid-cols-2 auto-rows-auto grid-cols-1 grid-flow-row justify-center items-center min-h-[100px] gap-5">
           <WeatherTile>
             <Temperature
-              placeName={mockWeatherData?.name}
-              iconName={mockWeatherData.weather[0].icon}
-              weatherDesc={mockWeatherData.weather[0].description}
-              temp={mockWeatherData.main.temp}
+              placeName={weatherData.name}
+              iconName={weatherData.weather[0].icon}
+              weatherDesc={weatherData.weather[0].description}
+              temp={weatherData.main.temp}
             />
           </WeatherTile>
           <WeatherTile>
-            <WindDeatils speed={mockWeatherData.wind.speed} deg={mockWeatherData.wind.deg} />
+            <WindDeatils speed={weatherData.wind.speed} deg={weatherData.wind.deg} />
           </WeatherTile>
           <WeatherTile>
-            <TempHumdityDetails weatherData={mockWeatherData} />
+            <TempHumdityDetails weatherData={weatherData} />
           </WeatherTile>
           <WeatherTile>
-            <VisibilityDetails visibility={mockWeatherData.visibility} />
+            <VisibilityDetails visibility={weatherData.visibility} />
           </WeatherTile>
         </div>
-      ) 
-      // : (
-        // <p className="ml-8">Error loading weather information for {placeName}</p>
-      // )
-      }
+      ) : (
+        <p className="ml-8 text-muted-foreground">No weather data available</p>
+      )}
     </SectionWrapper>
   );
 };
 
+// Weather tile component
 const WeatherTile = ({ children }: { children: ReactNode }) => {
   return (
     <div
@@ -123,6 +167,7 @@ const WeatherTile = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// Temperature component
 const Temperature = ({
   placeName,
   iconName,
@@ -134,6 +179,9 @@ const Temperature = ({
   weatherDesc: string;
   temp: number;
 }) => {
+  // Convert from Kelvin to Celsius
+  const tempCelsius = Math.round(temp - 273.15);
+  
   return (
     <>
       <div className="flex justify-center items-center">
@@ -147,13 +195,14 @@ const Temperature = ({
           className=""
           src={`https://openweathermap.org/img/wn/${iconName}@2x.png`}
         />
-        <span className="text-4xl font-semibold">{Math.round(temp)}°</span>
+        <span className="text-4xl font-semibold">{tempCelsius}°C</span>
       </div>
       <span className="capitalize text-muted-foreground text-sm">{weatherDesc}</span>
     </>
   );
 };
 
+// Visibility component
 const VisibilityDetails = ({ visibility }: { visibility: number }) => {
   return (
     <>
@@ -177,7 +226,13 @@ const VisibilityDetails = ({ visibility }: { visibility: number }) => {
   );
 };
 
+// Temperature and humidity details component
 const TempHumdityDetails = ({ weatherData }: { weatherData: CurrentWeatherResponse }) => {
+  // Convert from Kelvin to Celsius
+  const tempMaxCelsius = Math.round(weatherData.main.temp_max - 273.15);
+  const tempMinCelsius = Math.round(weatherData.main.temp_min - 273.15);
+  const feelsLikeCelsius = Math.round(weatherData.main.feels_like - 273.15);
+  
   return (
     <>
       <div className="flex gap-2 justify-between w-full">
@@ -192,21 +247,21 @@ const TempHumdityDetails = ({ weatherData }: { weatherData: CurrentWeatherRespon
           <ThermometerSun className="h-4 w-4" />
           <span>Max Temperature</span>
         </div>
-        <span>{Math.round(weatherData.main.temp_max)}°</span>
+        <span>{tempMaxCelsius}°C</span>
       </div>
       <div className="flex gap-2 justify-between w-full">
         <div className="flex items-center gap-1">
           <ThermometerSnowflake className="h-4 w-4" />
           <span>Min Temperature</span>
         </div>
-        <span>{Math.round(weatherData.main.temp_min)}°</span>
+        <span>{tempMinCelsius}°C</span>
       </div>
       <div className="flex gap-2 justify-between w-full">
         <div className="flex items-center gap-1">
           <Thermometer className="h-4 w-4" />
           <span>Feels like</span>
         </div>
-        <span>{Math.round(weatherData.main.feels_like)}°</span>
+        <span>{feelsLikeCelsius}°C</span>
       </div>
       {weatherData?.main?.sea_level && (
         <div className="flex gap-2 justify-between w-full">
@@ -221,7 +276,7 @@ const TempHumdityDetails = ({ weatherData }: { weatherData: CurrentWeatherRespon
   );
 };
 
-
+// Wind details component
 const WindDeatils = ({speed, deg}: {speed: number; deg: number}) => {
   return (
     <div className="flex gap-5 justify-center items-center">
@@ -316,11 +371,13 @@ const WindDeatils = ({speed, deg}: {speed: number; deg: number}) => {
   );
 };
 
+// Loading skeleton component
 const WeatherLoadingSkeleton = () => (
-  <div className="grid grid-cols-1 gap-4">
-    <Skeleton className="h-8 w-1/3" />
-    <Skeleton className="h-20 w-full" />
-    <Skeleton className="h-8 w-1/3" />
+  <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
+    <Skeleton className="h-40 w-full" />
+    <Skeleton className="h-40 w-full" />
+    <Skeleton className="h-40 w-full" />
+    <Skeleton className="h-40 w-full" />
   </div>
 );
 
