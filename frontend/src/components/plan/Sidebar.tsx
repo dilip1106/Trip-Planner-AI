@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import Pulse from '@/components/shared/Pulse';
 import { Button } from '@/components/ui/button';
 import { usePlanContext } from '@/context/PlanContexProvider';
@@ -11,22 +11,42 @@ interface SidebarProps {
   isPublic: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({  isMobile = false, isPublic }) => {
-  const { planState } = usePlanContext();
-    const {planId} = useParams();
+const Sidebar: React.FC<SidebarProps> = ({ isMobile = false, isPublic }) => {
+  const { planId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Get the base plan URL by removing any sub-routes
+  const basePlanUrl = `/plan/${planId}/plan`;
+
   const sections = useMemo(() => {
     if (isPublic) return planSections.filter((section) => section.isPublic === isPublic);
     else return planSections;
   }, [planSections, isPublic]);
 
-
   const handleSectionClick = (sectionId: string) => (e: React.MouseEvent) => {
     e.preventDefault();
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      // Update URL without triggering navigation
-      window.history.pushState({}, '', `${location.pathname}#${sectionId}`);
+    
+    // If we're in a control center route, navigate to main plan view first
+    if (location.pathname.includes('/expense-tracker') || 
+        location.pathname.includes('/settings') || 
+        location.pathname.includes('/collaborate')) {
+      navigate(basePlanUrl);
+      // Wait for navigation to complete before scrolling
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          window.history.pushState({}, '', `${basePlanUrl}#${sectionId}`);
+        }
+      }, 100);
+    } else {
+      // Normal scroll behavior for main plan view
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        window.history.pushState({}, '', `${basePlanUrl}#${sectionId}`);
+      }
     }
   };
 
@@ -37,7 +57,7 @@ const Sidebar: React.FC<SidebarProps> = ({  isMobile = false, isPublic }) => {
         <div className="flex flex-col">
           {sections.map((section) => (
             <Link
-              to={`/plan/${planId}#${section.id}`}
+              to={`${basePlanUrl}#${section.id}`}
               key={section.id}
               onClick={handleSectionClick(section.id)}
             >
@@ -51,7 +71,7 @@ const Sidebar: React.FC<SidebarProps> = ({  isMobile = false, isPublic }) => {
               >
                 {section.icon}
                 <span className="text-left">{section.name}</span>
-                {!isPublic && !isMobile && planState && !planState[section.id] && <Pulse />}
+                {/* {!isPublic && !isMobile && planState && !planState[section.id] && <Pulse />} */}
               </Button>
             </Link>
           ))}
@@ -79,7 +99,7 @@ const Sidebar: React.FC<SidebarProps> = ({  isMobile = false, isPublic }) => {
               );
 
             return (
-              <Link to={isPublic ? `#` : `/plan/${planId}/${link.id}`} key={link.id}>
+              <Link to={isPublic ? `#` : `${basePlanUrl}/${link.id}`} key={link.id}>
                 <TooltipContainer text={link.tooltipText}>
                   <Button
                     disabled={isPublic}

@@ -7,6 +7,7 @@ import * as GroqService from '../services/groq_service.js'; // Updated import to
 import { generateDestinationImage } from '../services/image_service.js';
 import axios from 'axios';
 import dotenv from 'dotenv';
+
 dotenv.config();
 // Create a new plan
 export const createPlan = async (req, res) => {
@@ -78,7 +79,7 @@ export const getAllPlans = async (req, res) => {
 
 export const getPlanById = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id,planType } = req.params;
     const clerkId = req.user?.clerkId; // Will be undefined if not authenticated
     
     const plan = await Plan.findById(id).populate('user', 'name email');
@@ -156,8 +157,7 @@ export const updatePlan = async (req, res) => {
 export const deletePlan = async (req, res) => {
   try {
     const { id } = req.params;
-    const { clerkId } = req.user;
-    
+    const {clerkId} = req.user;
     // Find the plan
     const plan = await Plan.findById(id);
     

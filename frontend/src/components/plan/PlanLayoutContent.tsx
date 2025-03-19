@@ -8,7 +8,7 @@ const PlanLayoutContent = ({
   isPublic,
 }: {
   children: React.ReactNode;
-  isPublic: boolean;
+  isPublic: boolean; 
 }) => {
   return (
     <PlanContextProvider isPublic={isPublic}>

@@ -1,4 +1,6 @@
 // backend/routes/user.routes.js
+import { updateUser } from '../controllers/auth.controller.js';
+import { authenticateUser } from '../middleware/verifyAuthUser.js';
 import User from '../models/user.model.js';
 import express from 'express';
 const router = express.Router();
@@ -107,5 +109,57 @@ router.get('/invitations', async (req, res) => {
     res.status(400).json({ success: false, error: error.message });
   }
 });
+
+// Get user preferences
+router.post('/currency', authenticateUser, async (req, res) => {
+  try {
+    const  userData  = req.body;
+    const clerkUserId = userData.clerkId;
+    const user = await User.findOne({ clerkUserId });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    return res.status(200).json({
+      preferredCurrency: user.preferredCurrency || 'INR'
+    });
+  } catch (error) {
+    console.error('Error fetching user preferences:', error);
+    return res.status(500).json({ error: 'Failed to fetch user preferences' });
+  }
+});
+
+router.put('/user/update', authenticateUser, updateUser)
+// Update user preferences
+router.post('/currency/update', authenticateUser, async (req, res) => {
+  try {
+    const  {currencyCode}   = req.body;
+    const  userData  = req.body;
+    // const userData = req.body;
+    const clerkUserId = userData.clerkId;
+    if (!currencyCode) {
+      return res.status(400).json({ error: 'Currency code is required' });
+    }
+    
+    const user = await User.findOne({ clerkUserId });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    user.preferredCurrency = currencyCode;
+    await user.save();
+    
+    return res.status(200).json({
+      message: 'Preferences updated successfully',
+      preferredCurrency: user.preferredCurrency
+    });
+  } catch (error) {
+    console.error('Error updating user preferences:', error);
+    return res.status(500).json({ error: 'Failed to update user preferences' });
+  }
+});
+
 
 export default router;

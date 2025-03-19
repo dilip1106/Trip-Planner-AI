@@ -1,5 +1,5 @@
-import CommunityPlan from "@/components/plan/CommunityPlan";
 import Header from "@/components/plan/Header";
+import PrivatePlan from "@/components/plan/PrivatePlan";
 import Sidebar from "@/components/plan/Sidebar";
 
 export default  function PlanPage() {
@@ -13,11 +13,9 @@ export default  function PlanPage() {
              lg:border-r lg:border-muted-foreground/30 
              relative"
           >
-            
-            
-            <Sidebar  isPublic={true} />
+            <Sidebar  isPublic={false} />
           </div>
-          <div className="md:col-span-4 pl-4 lg:pl-8"><CommunityPlan  /></div>
+          <div className="md:col-span-4 pl-4 lg:pl-8"><PrivatePlan  /></div>
         </div>
       </div>
   </>

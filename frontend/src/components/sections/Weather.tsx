@@ -62,7 +62,7 @@ interface CurrentWeatherResponse {
 }
 
 const Weather = ({ placeName }: { placeName: string | undefined }) => {
-  const { setPlanState } = usePlanContext();
+  // const { setPlanState } = usePlanContext();
   const [weatherData, setWeatherData] = useState<CurrentWeatherResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -104,14 +104,14 @@ const Weather = ({ placeName }: { placeName: string | undefined }) => {
     getWeather(placeName)
       .then((data) => {
         setWeatherData(data);
-        setPlanState((state) => ({ ...state, weather: true }));
+        // setPlanState((state) => ({ ...state, weather: true }));
       })
       .catch((e) => {
         console.error(e);
         setError(`Error: ${e.message}`);
         setWeatherData(null);
       });
-  }, [placeName, setPlanState]);
+  }, [placeName]);
 
   return (
     <SectionWrapper id="weather">

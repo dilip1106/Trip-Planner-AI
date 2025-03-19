@@ -40,7 +40,7 @@ router.get('/:id',  getPlanById);
 
 
 router.put('/:id',authenticateUser, updatePlan);
-router.delete('/:id', deletePlan);
+router.delete('/:id/delete',authenticateUser, deletePlan);
 
 // Collaboration routes
 router.post('/:id/collaborators',authenticateUser, inviteCollaborator);
@@ -48,7 +48,7 @@ router.post('/invite/accept/:token',authenticateUser, acceptCollaboratorInvite);
 
 router.post('/:id/collaborators/:userId/revoke',authenticateUser, removeCollaborator );
 router.post('/:planId/invite/:id/revoke',authenticateUser, revokeInvite);
-// http://localhost:5000/api/plan/${planId}/collaborators/${id}/revoke
+
 router.post('/:id/invites',authenticateUser, getPlanInvites );
 router.post('/:id/getCollaborator',authenticateUser, getAcceptedInvites );
 

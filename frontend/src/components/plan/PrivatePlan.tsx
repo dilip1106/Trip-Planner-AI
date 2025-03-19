@@ -12,7 +12,7 @@ import ImageSection from "../sections/ImageSection";
 import axios, { AxiosError } from "axios";
 import Weather from "../sections/Weather";
 
-export default function CommunityPlan() {
+export default function PrivatePlan() {
   const [plan, setPlan] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -98,7 +98,7 @@ export default function CommunityPlan() {
       placeName={plan?.destination}
       destinationImage={plan?.destinationImage}
       isLoading={false}
-      allowEdit={false}
+      allowEdit={true}
       planId={planId}
       />
       {/* {plan.aboutThePlace && (
@@ -108,14 +108,16 @@ export default function CommunityPlan() {
         isLoading={false}
         planId={planId}
         content={plan.aboutThePlace}
-        allowEdit={false}
+        allowEdit={true}
       />
+
+      <Weather placeName={plan.destination} />
       {plan.adventureActivities && (
       <TopActivities
         activities={plan.adventureActivities}
         planId={planId}
         isLoading={false}
-        allowEdit={false}
+        allowEdit={true}
       />
       )}
       {plan.topPlacesToVisit && (
@@ -123,7 +125,7 @@ export default function CommunityPlan() {
         topPlacesToVisit={plan.topPlacesToVisit}
         planId={planId}
         isLoading={false}
-        allowEdit={false}
+        allowEdit={true}
       />
       )}
       {plan.itinerary && (
@@ -131,7 +133,7 @@ export default function CommunityPlan() {
         initialItinerary={plan.itinerary}
         planId={planId}
         isLoading={false}
-        allowEdit={false}
+        allowEdit={true}
       />
       )}
       {plan.localCuisine && (
@@ -139,7 +141,7 @@ export default function CommunityPlan() {
         recommendations={plan.localCuisine}
         isLoading={false}
         planId={planId}
-        allowEdit={false}
+        allowEdit={true}
       />
       )}
       {plan.packingChecklist && (
@@ -147,7 +149,7 @@ export default function CommunityPlan() {
         checklist={plan.packingChecklist}
         isLoading={false}
         planId={planId}
-        allowEdit={false}
+        allowEdit={true}
       />
       )}
       {plan.bestTimeToVisit && (
@@ -155,7 +157,7 @@ export default function CommunityPlan() {
         content={plan.bestTimeToVisit}
         planId={planId}
         isLoading={false}
-        allowEdit={false}
+        allowEdit={true}
       />
       )}
     </section>
