@@ -1,8 +1,12 @@
+import ExpenseSection from '@/components/expense-tracker/ExpenseSection'
 import Header from '@/components/plan/Header'
 import Sidebar from '@/components/plan/Sidebar'
+
 import React from 'react'
+import { useParams } from 'react-router-dom'
 
 const ExpenseTracker = () => {
+  const {planId} =useParams();
   return (
     <>
     
@@ -18,7 +22,7 @@ const ExpenseTracker = () => {
             
             <Sidebar  isPublic={false} />
           </div>
-          <div className="md:col-span-4 pl-4 lg:pl-8">Expense Tracker</div>
+          <div className="md:col-span-4 pl-4 lg:pl-8"><ExpenseSection planId={planId}/></div>
         </div>
       </div>
   </>
