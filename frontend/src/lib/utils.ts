@@ -2,7 +2,25 @@ import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { DateRange } from 'react-day-picker';
 import { formatDate } from "date-fns";
+import { useAuth, useUser } from "@clerk/clerk-react";
 
+export const getUserData = () => {
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  
+  if (!isSignedIn || !user) return null;
+  
+  const primaryEmail = user.emailAddresses.find(
+    email => email.id === user.primaryEmailAddressId
+  )?.emailAddress;
+
+  return {
+    clerkId: user.id,
+    email: primaryEmail || "",
+    name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+    image: user.imageUrl
+  };
+};
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }

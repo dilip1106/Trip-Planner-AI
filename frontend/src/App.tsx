@@ -1,4 +1,4 @@
-import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
+import {BrowserRouter as Router, Routes, Route, useParams} from 'react-router-dom';
 import Plan from './pages/Plan';
 import Collaborator from './pages/Collaborator';
 import Layout from './layout/Plan';
@@ -10,6 +10,7 @@ import Join from './pages/JoinPlan';
 import Settings from './pages/Settings';
 import ExpenseTracker from './pages/ExpenseTracker';
 import PrivatePlan from "./pages/PrivatePlan";
+import ProtectedRoute from './components/auth/ProtectedRoute';
 
 const queryClient = new QueryClient();
 
@@ -21,45 +22,39 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="dashboard/:token" element={<Join />} />
-          {/* <Route path="/" element={<Plan />} /> */}
-          {/* Layout wrapper for specific routes */}
-          <Route
-            path="/plan/:planId/community-plan"
-            element={
-              // <Layout>
-                <Plan />
-              // </Layout>
-            }
-          />
-          <Route
-            path="/plan/:planId/plan"
-            element={
-              // <Layout>
-                <PrivatePlan />
-              // </Layout>
-            }
-          />
+          
+          {/* Protected Routes */}
           <Route
             path="/plan/:planId/plan/expense-tracker"
             element={
-              // <Layout>
+              <ProtectedRoute>
                 <ExpenseTracker />
-              // </Layout>
+              </ProtectedRoute>
             }
           />
-          <Route path="/plan/:planId/plan/collaborate" element={
-            // <Layout>
+          
+          <Route
+            path="/plan/:planId/plan/collaborate"
+            element={
+              <ProtectedRoute>
                 <Collaborator />
-              // </Layout>
-            } />   
-              <Route path="/plan/:planId/plan/settings" element={
-                // <Layout>
+              </ProtectedRoute>
+            }
+          />
+          
+          <Route
+            path="/plan/:planId/plan/settings"
+            element={
+              <ProtectedRoute>
                 <Settings />
-              // </Layout>
-            } />     
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Other routes remain the same */}
+          <Route path="/plan/:planId/community-plan" element={<Plan />} />
+          <Route path="/plan/:planId/plan" element={<PrivatePlan />} />
         </Routes>
-        
-        
       </Router>
     </QueryClientProvider>
   )

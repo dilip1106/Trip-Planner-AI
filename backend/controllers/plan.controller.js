@@ -79,7 +79,7 @@ export const getAllPlans = async (req, res) => {
 
 export const getPlanById = async (req, res) => {
   try {
-    const { id,planType } = req.params;
+    const { id } = req.params;
     const clerkId = req.user?.clerkId; // Will be undefined if not authenticated
     
     const plan = await Plan.findById(id).populate('user', 'name email');
@@ -95,6 +95,32 @@ export const getPlanById = async (req, res) => {
     );
     
     if (!plan.isPublic && !isOwner && !isCollaborator) {
+      return res.status(403).json({ success: false, error: 'Access denied' });
+    }
+    
+    res.status(200).json({ success: true, data: plan });
+  } catch (error) {
+    res.status(400).json({ success: false, error: error.message });
+  }
+};
+export const getPlanByIdForPlan = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const clerkId = req.user?.clerkId; // Will be undefined if not authenticated
+    
+    const plan = await Plan.findById(id).populate('user', 'name email');
+    
+    if (!plan) {
+      return res.status(404).json({ success: false, error: 'Plan not found' });
+    }
+    
+    // Check if plan is public or if user is owner or collaborator
+    const isOwner = clerkId && plan.clerkUserId === clerkId;
+    const isCollaborator = clerkId && plan.collaborators.some(
+      collab => collab.clerkUserId === clerkId && collab.status === 'accepted'
+    );
+    
+    if (!isOwner && !isCollaborator) {
       return res.status(403).json({ success: false, error: 'Access denied' });
     }
     

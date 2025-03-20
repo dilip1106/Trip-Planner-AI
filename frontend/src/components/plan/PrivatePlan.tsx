@@ -11,6 +11,9 @@ import BestTimeToVisit from "../sections/BestTimeToVisit";
 import ImageSection from "../sections/ImageSection";
 import axios, { AxiosError } from "axios";
 import Weather from "../sections/Weather";
+import Header from "./Header";
+import Sidebar from "@/components/plan/Sidebar";
+import AccessDenied from "./AccessDenied";
 
 export default function PrivatePlan() {
   const [plan, setPlan] = useState<any>(null);
@@ -55,7 +58,7 @@ export default function PrivatePlan() {
         
         // Send the userData in the request headers or as a POST request with the userData in the body
         const response = await axios.post(
-          `http://localhost:5000/api/plan/${planId}/view`, 
+          `http://localhost:5000/api/plan/${planId}/view/plan`, 
           { userData }
         );
         
@@ -80,7 +83,7 @@ export default function PrivatePlan() {
   }
   
   if (error) {
-    return <p>Error Loading Plan: {error}</p>;
+    return <AccessDenied/>
   }
   
   if (!plan) {
@@ -88,78 +91,98 @@ export default function PrivatePlan() {
   }
   
   return (
-    <section className="h-full flex flex-col gap-10">
-      <ImageSection
-      userPrompt={plan?.userPrompt}
-      companion={undefined}
-      activityPreferences={[]}
-      fromDate={undefined}
-      toDate={undefined}
-      placeName={plan?.destination}
-      destinationImage={plan?.destinationImage}
-      isLoading={false}
-      allowEdit={true}
-      planId={planId}
-      />
-      {/* {plan.aboutThePlace && (
+    <>
+    
+      <Header/>
       
-      )} */}
-      <AboutThePlace
-        isLoading={false}
-        planId={planId}
-        content={plan.aboutThePlace}
-        allowEdit={true}
-      />
+      <div className="w-full lg:px-20 px-5 py-6 min-h-[calc(100svh-6.5rem)] bg-background">
+        <div className="md:grid md:grid-cols-5 lg:gap-2 md:gap-5 gap-3">
+          <div
+            className="hidden md:flex md:col-span-1 
+             lg:border-r lg:border-muted-foreground/30 
+             relative"
+          >
+            <Sidebar  isPublic={false} />
+          </div>
+          <div className="md:col-span-4 pl-4 lg:pl-8">
+          <section className="h-full flex flex-col gap-10">
+            <ImageSection
+            userPrompt={plan?.userPrompt}
+            companion={undefined}
+            activityPreferences={[]}
+            fromDate={undefined}
+            toDate={undefined}
+            placeName={plan?.destination}
+            destinationImage={plan?.destinationImage}
+            isLoading={false}
+            allowEdit={true}
+            planId={planId}
+            />
+            {/* {plan.aboutThePlace && (
+            
+            )} */}
+            <AboutThePlace
+              isLoading={false}
+              planId={planId}
+              content={plan.aboutThePlace}
+              allowEdit={true}
+            />
 
-      <Weather placeName={plan.destination} />
-      {plan.adventureActivities && (
-      <TopActivities
-        activities={plan.adventureActivities}
-        planId={planId}
-        isLoading={false}
-        allowEdit={true}
-      />
-      )}
-      {plan.topPlacesToVisit && (
-      <TopPlacesToVisit
-        topPlacesToVisit={plan.topPlacesToVisit}
-        planId={planId}
-        isLoading={false}
-        allowEdit={true}
-      />
-      )}
-      {plan.itinerary && (
-      <Itinerary
-        initialItinerary={plan.itinerary}
-        planId={planId}
-        isLoading={false}
-        allowEdit={true}
-      />
-      )}
-      {plan.localCuisine && (
-      <LocalCuisineRecommendations
-        recommendations={plan.localCuisine}
-        isLoading={false}
-        planId={planId}
-        allowEdit={true}
-      />
-      )}
-      {plan.packingChecklist && (
-      <PackingChecklist
-        checklist={plan.packingChecklist}
-        isLoading={false}
-        planId={planId}
-        allowEdit={true}
-      />
-      )}
-      {plan.bestTimeToVisit && (
-      <BestTimeToVisit
-        content={plan.bestTimeToVisit}
-        planId={planId}
-        isLoading={false}
-        allowEdit={true}
-      />
-      )}
-    </section>
+            <Weather placeName={plan.destination} />
+            {plan.adventureActivities && (
+            <TopActivities
+              activities={plan.adventureActivities}
+              planId={planId}
+              isLoading={false}
+              allowEdit={true}
+            />
+            )}
+            {plan.topPlacesToVisit && (
+            <TopPlacesToVisit
+              topPlacesToVisit={plan.topPlacesToVisit}
+              planId={planId}
+              isLoading={false}
+              allowEdit={true}
+            />
+            )}
+            {plan.itinerary && (
+            <Itinerary
+              initialItinerary={plan.itinerary}
+              planId={planId}
+              isLoading={false}
+              allowEdit={true}
+            />
+            )}
+            {plan.localCuisine && (
+            <LocalCuisineRecommendations
+              recommendations={plan.localCuisine}
+              isLoading={false}
+              planId={planId}
+              allowEdit={true}
+            />
+            )}
+            {plan.packingChecklist && (
+            <PackingChecklist
+              checklist={plan.packingChecklist}
+              isLoading={false}
+              planId={planId}
+              allowEdit={true}
+            />
+            )}
+            {plan.bestTimeToVisit && (
+            <BestTimeToVisit
+              content={plan.bestTimeToVisit}
+              planId={planId}
+              isLoading={false}
+              allowEdit={true}
+            />
+            )}
+          </section>
+          </div>
+          
+        </div>
+      </div>
+    </>
+    
   );
 }
