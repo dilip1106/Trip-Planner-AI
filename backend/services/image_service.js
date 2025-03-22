@@ -17,79 +17,54 @@ const UNSPLASH_ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
  */
 const generateDestinationImage = async (destination) => {
   try {
-    
     if (!UNSPLASH_ACCESS_KEY) {
       return getPlaceholderImage();
     }
     
-    // Clean up the destination string to improve search
-    const cleanDestination = destination.replace(/,/g, ' ').trim();
+    // Clean up the destination string and get the city name
+    const cityName = destination.split(/[,]+/)[0].trim();
     
-    // Create more specific search terms for the destination
-    const searchTerms = [
-      `${cleanDestination} landmark`,
-      `${cleanDestination} skyline`,
-      `${cleanDestination} famous`,
-      `${cleanDestination} tourism`,
-      `${cleanDestination} landscape`,
-      `${cleanDestination} attraction`
-    ];
+    // Create a specific search term for famous landmarks
+    const searchTerm = `${cityName}`;
     
-    // Try different search terms until we find a good image
-    let imageBase64 = null;
-    
-    for (const searchTerm of searchTerms) {
-      try {
-        // Search Unsplash for images related to the destination with the current search term
-        const searchResponse = await axios.get('https://api.unsplash.com/search/photos', {
-          params: {
-            query: searchTerm,
-            per_page: 5,
-            orientation: 'landscape',
-            content_filter: 'high',
-            order_by: 'relevant'
-          },
-          headers: {
-            'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`
-          }
+    try {
+      // Search Unsplash for images of famous landmarks in the city
+      const searchResponse = await axios.get('https://api.unsplash.com/search/photos', {
+        params: {
+          query: searchTerm,
+          per_page: 1, // Only get the most relevant result
+          orientation: 'landscape',
+          content_filter: 'high',
+          order_by: 'relevant'
+        },
+        headers: {
+          'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`
+        }
+      });
+      
+      // Check if we got a result
+      if (searchResponse.data?.results?.[0]) {
+        const imageUrl = searchResponse.data.results[0].urls.regular;
+        
+        // Download the image
+        const imageResponse = await axios.get(imageUrl, {
+          responseType: 'arraybuffer'
         });
         
-        // Check if we got any results
-        if (searchResponse.data && searchResponse.data.results && searchResponse.data.results.length > 0) {
-          // Get the URL of the best image (first result)
-          const imageUrl = searchResponse.data.results[0].urls.regular;
-          
-          // Download the image as binary data
-          const imageResponse = await axios.get(imageUrl, {
-            responseType: 'arraybuffer'
-          });
-          
-          // Convert the binary data to base64
-          imageBase64 = Buffer.from(imageResponse.data).toString('base64');
-          
-          // Log the successful search term
-        
-          // Break the loop as we found a good image
-          break;
-        }
-      } catch (error) {
-        console.error(`Error with search term "${searchTerm}":`, error.message);
-        // Continue to the next search term
-        continue;
+        // Convert to base64
+        return Buffer.from(imageResponse.data).toString('base64');
       }
-    }
-    
-    // If no image was found after trying all search terms, use a placeholder
-    if (!imageBase64) {
       
+      // If no image found, use placeholder
+      return getPlaceholderImage();
+      
+    } catch (error) {
+      console.error(`Error fetching image for "${cityName}":`, error.message);
       return getPlaceholderImage();
     }
     
-    return imageBase64;
   } catch (error) {
     console.error("Image fetch error:", error.message);
-    
-    // If image fetch fails, return a placeholder image
     return getPlaceholderImage();
   }
 };
@@ -112,7 +87,6 @@ const getPlaceholderImage = () => {
       const imageBuffer = fs.readFileSync(placeholderPath);
       return imageBuffer.toString('base64');
     } else {
-      
       // Create the assets directory if it doesn't exist
       const assetsDir = path.join(__dirname, '../assets');
       if (!fs.existsSync(assetsDir)) {

@@ -16,7 +16,8 @@ import {
   getPlanInvites,
   revokeInvite,
   getAcceptedInvites,
-  getPlanByIdForPlan
+  getPlanByIdForPlan,
+  getPlanUsers
 } from '../controllers/plan.controller.js';
 import { authenticateUser } from '../middleware/verifyAuthUser.js';
 import Plan from '../models/plans.model.js';
@@ -55,6 +56,7 @@ router.post('/:planId/invite/:id/revoke',authenticateUser, revokeInvite);
 router.post('/:id/invites',authenticateUser, getPlanInvites );
 router.post('/:id/getCollaborator',authenticateUser, getAcceptedInvites );
 
+router.post('/:planId/users',authenticateUser, getPlanUsers);
 // router.delete('/:id/collaborators/:userId', removeCollaborator);
 // On your backend server
 router.post('/:planId/check-access', async (req, res) => {

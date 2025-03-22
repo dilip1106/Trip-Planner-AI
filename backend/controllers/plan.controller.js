@@ -588,23 +588,31 @@ export const getAcceptedInvites = async (req, res) => {
 export const generatePlan = async (req, res) => {
   try {
     const { destination, fromDate, toDate, activityPreferences, companion } = req.body;
-    const { clerkId, email, name } = req.user; // Assuming middleware adds user info to req
+    const { clerkId, email, name } = req.user;
     
     if (!destination) {
       return res.status(400).json({ error: "Destination is required" });
     }
     
-    // Find or create user in our database
+    // Find or create user and check credits
     let user = await User.findOne({ clerkId });
     if (!user) {
       user = await User.create({
         clerkId,
         email,
         name,
-        image: req.user.image || ''
+        image: req.user.image || '',
+        credits: 3 // Default credits for new user
       });
     }
-    
+
+    // Check if user has available credits
+    if (user.credits <= 0) {
+      return res.status(403).json({ 
+        error: "You don't have enough credits to generate a plan" 
+      });
+    }
+
     // Configure input parameters for Groq
     const inputParams = {
       userPrompt: `Generate a travel plan for ${destination}`,
@@ -619,13 +627,13 @@ export const generatePlan = async (req, res) => {
       GroqService.generateBasicInfo(inputParams.userPrompt),
       GroqService.generateActivities(inputParams),
       GroqService.generateItinerary(inputParams),
-      generateDestinationImage(destination) // Generate image in parallel
+      generateDestinationImage(destination)
     ]);
     
-    // Create a new plan in the database
+    // Create a new plan
     const newPlan = new Plan({
-      user: user._id, // Link to MongoDB user ID
-      clerkUserId: clerkId, // Also store Clerk ID directly in plan
+      user: user._id,
+      clerkUserId: clerkId,
       destination,
       fromDate: fromDate ? new Date(fromDate) : undefined,
       toDate: toDate ? new Date(toDate) : undefined,
@@ -638,19 +646,24 @@ export const generatePlan = async (req, res) => {
       packingChecklist: activities.packingchecklist,
       itinerary: itineraryData.itinerary,
       topPlacesToVisit: itineraryData.topplacestovisit,
-      destinationImage: destinationImage, // Store the base64 encoded image
+      destinationImage: destinationImage,
       isPublic: false,
-      collaborators: [] // Initialize with empty collaborators array
+      collaborators: []
     });
     
     const savedPlan = await newPlan.save();
     
-    // Add plan to user's plans array
+    // Update user: decrement credits and add plan to their plans array
     await User.findByIdAndUpdate(user._id, {
+      $inc: { credits: -1 }, // Decrement credits by 1
       $push: { plans: savedPlan._id }
     });
     
-    res.status(201).json(savedPlan);
+    res.status(201).json({
+      success: true,
+      data: savedPlan,
+      remainingCredits: user.credits - 1
+    });
   } catch (error) {
     console.error("Error generating plan:", error);
     res.status(500).json({ error: error.message });
@@ -718,7 +731,65 @@ export const generateEmptyPlan = async (req, res) => {
   }
 };
 
-
+export const getPlanUsers = async (req, res) => {
+  try {
+    const { planId } = req.params;
+    
+    const plan = await Plan.findById(planId);
+    
+    if (!plan) {
+      return res.status(404).json({ message: 'Plan not found' });
+    }
+    
+    // Get the owner information
+    const owner = await User.findOne({ clerkId: plan.clerkUserId });
+    
+    if (!owner) {
+      return res.status(404).json({ message: 'Plan owner not found' });
+    }
+    
+    // Format owner information with name
+    const ownerInfo = {
+      _id: owner._id,
+      userId: owner.clerkUserId,
+      firstName: owner.firstName || '',
+      lastName: owner.lastName || '',
+      name: owner.name || `${owner.firstName || ''} ${owner.lastName || ''}`.trim() || 'Unknown User'
+    };
+    
+    // Get collaborator information
+    const collaboratorInfoPromises = plan.collaborators
+      .filter(collab => collab.status === 'accepted')
+      .map(async (collab) => {
+        const user = await User.findOne({ clerkId: collab.clerkUserId });
+        
+        if (!user) {
+          return {
+            _id: collab.userId,
+            userId: collab.clerkUserId,
+            name: collab.name || 'Unknown User'
+          };
+        }
+        
+        return {
+          _id: user._id,
+          userId: user.clerkUserId,
+          firstName: user.firstName || '',
+          lastName: user.lastName || '',
+          name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Unknown User'
+        };
+      });
+    
+    const collaboratorInfo = await Promise.all(collaboratorInfoPromises);
+    
+    // Combine owner and collaborators
+    const users = [ownerInfo, ...collaboratorInfo];
+    
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching plan users', error: error.message });
+  }
+};
 
 
 
@@ -736,8 +807,11 @@ export const getWeather = async (req, res) => {
       return res.status(500).json({ error: 'API key not configured' });
     }
 
+    // Get only the part before the first comma and trim whitespace
+    const searchQuery = placeName.split(',')[0].trim();
+
     const response = await axios.get(
-      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(placeName)}&appid=${API_KEY}`
+      `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(searchQuery)}&appid=${API_KEY}`
     );
 
     return res.json(response.data);

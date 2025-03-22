@@ -3,6 +3,7 @@ import { updateUser } from '../controllers/auth.controller.js';
 import { authenticateUser } from '../middleware/verifyAuthUser.js';
 import User from '../models/user.model.js';
 import express from 'express';
+import mongoose from 'mongoose';
 const router = express.Router();
 
 // API endpoint to save user data after authentication
@@ -110,56 +111,35 @@ router.get('/invitations', async (req, res) => {
   }
 });
 
-// Get user preferences
-// router.post('/currency', authenticateUser, async (req, res) => {
-//   try {
-//     const  userData  = req.body;
-//     const clerkUserId = userData.clerkId;
-//     const user = await User.findOne({ clerkUserId });
+// Get user credits
+router.post('/credits', authenticateUser, async (req, res) => {
+  try {
+    const { clerkId } = req.user;
     
-//     if (!user) {
-//       return res.status(404).json({ error: 'User not found' });
-//     }
+    if (!clerkId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
     
-//     return res.status(200).json({
-//       preferredCurrency: user.preferredCurrency || 'INR'
-//     });
-//   } catch (error) {
-//     console.error('Error fetching user preferences:', error);
-//     return res.status(500).json({ error: 'Failed to fetch user preferences' });
-//   }
-// });
+    const user = await User.findOne({ clerkId: clerkId });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Return the credits (default to 3 if not set)
+    return res.status(200).json({
+      success: true,
+      credits: user.credits
+    });
+  } catch (error) {
+    console.error('Error fetching user credits:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Failed to fetch user credits' 
+    });
+  }
+});
 
 router.put('/user/update', authenticateUser, updateUser)
-// Update user preferences
-// router.post('/currency/update', authenticateUser, async (req, res) => {
-//   try {
-//     const  {currencyCode}   = req.body;
-//     const  userData  = req.body;
-//     // const userData = req.body;
-//     const clerkUserId = userData.clerkId;
-//     if (!currencyCode) {
-//       return res.status(400).json({ error: 'Currency code is required' });
-//     }
-    
-//     const user = await User.findOne({ clerkUserId });
-    
-//     if (!user) {
-//       return res.status(404).json({ error: 'User not found' });
-//     }
-    
-//     user.preferredCurrency = currencyCode;
-//     await user.save();
-    
-//     return res.status(200).json({
-//       message: 'Preferences updated successfully',
-//       preferredCurrency: user.preferredCurrency
-//     });
-//   } catch (error) {
-//     console.error('Error updating user preferences:', error);
-//     return res.status(500).json({ error: 'Failed to update user preferences' });
-//   }
-// });
-
 
 export default router;

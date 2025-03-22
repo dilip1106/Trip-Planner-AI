@@ -14,6 +14,7 @@ import {
     DialogTitle,
   } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
+import { useUser } from "@clerk/clerk-react";
 
 // Replace this with your backend API call for user data
 const fetchUserData = async () => {
@@ -34,41 +35,21 @@ interface User {
   email: string;
 }
 
-const DrawerWithDialog = ({ shouldOpenForCreatePlan = false }) => {
-  const [User, setUser] = useState<User | null>(null);
+interface DrawerDialogProps {
+  shouldOpenForCreatePlan: boolean;
+  credits: number;
+}
+
+const DrawerDialog: React.FC<DrawerDialogProps> = ({ shouldOpenForCreatePlan, credits }) => {
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery("(min-width: 768px)");
-
-  useEffect(() => {
-    // Fetch user data on component mount
-    const getUserData = async () => {
-      const userData = await fetchUserData();
-      setUser(userData);
-    };
-    getUserData();
-  }, []);
-
-  // const { user } = useUser()
-
-  // if (!isLoaded) {
-  //   // Handle loading state
-  //   return null
-  // }
-
-  // if (isSignedIn) {
-  //   setUser(user.fullName);
-  //   return 
-  // }
-
-  const boughtCredits = 0;
-  const freeCredits = 1;
-  const totalCredits = freeCredits + boughtCredits;
+  const { user } = useUser();
 
   const btnText = shouldOpenForCreatePlan
     ? "Create Travel Plan"
-    : `Credits ${totalCredits ?? 0}`;
+    : `Credits ${credits ?? 0}`;
 
-  const shouldShowCreatePlanForm = shouldOpenForCreatePlan && totalCredits > 0;
+  const shouldShowCreatePlanForm = shouldOpenForCreatePlan && credits > 0;
 
   const content = shouldShowCreatePlanForm ? (
     <>
@@ -79,9 +60,8 @@ const DrawerWithDialog = ({ shouldOpenForCreatePlan = false }) => {
     </>
   ) : (
     <CreditContent
-      boughtCredits={boughtCredits}
-      freeCredits={freeCredits}
-      email={"dilipteli38@gmail.com"}
+      credits={credits}
+      email={user?.primaryEmailAddress?.emailAddress}
     />
   );
 
@@ -132,25 +112,19 @@ const DrawerWithDialog = ({ shouldOpenForCreatePlan = false }) => {
 };
 
 const CreditContent = ({
-  boughtCredits,
-  freeCredits,
+  credits,
   email,
 }: {
-  boughtCredits: number;
-  freeCredits: number;
+  credits: number;
   email: string | undefined;
 }) => {
   return (
     <div>
-      {boughtCredits > 0 || freeCredits > 0 ? (
+      {credits > 0 ? (
         <div className="flex gap-2 justify-between items-center p-2">
           <div className="flex flex-col gap-1 justify-center items-center p-10 rounded-lg border-2 flex-1">
-            <span>Free Credits</span>
-            <span className="font-bold text-7xl">{freeCredits}</span>
-          </div>
-          <div className="flex flex-col gap-1 justify-center items-center p-10 rounded-lg border-2 flex-1">
-            <span>Bought Credits</span>
-            <span className="font-bold text-7xl">{boughtCredits}</span>
+            <span>Available Credits</span>
+            <span className="font-bold text-7xl">{credits}</span>
           </div>
         </div>
       ) : (
@@ -172,7 +146,7 @@ const CreditContent = ({
           "bg-blue-500 text-white hover:bg-blue-700",
           "flex gap-1 justify-center items-center mt-2 mb-1"
         )}
-        to={`${process.env.NEXT_PUBLIC_RAZORPAY_PAYMENT_PAGE_URL}${
+        to={`${"process.env.NEXT_PUBLIC_RAZORPAY_PAYMENT_PAGE_URL"}${
           email ? `/?email=${email} ` : ``
         }`}
       >
@@ -202,4 +176,4 @@ const CreditContent = ({
   );
 };
 
-export default DrawerWithDialog;
+export default DrawerDialog;

@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [filteredPlans, setFilteredPlans] = useState<Plan[] | undefined>();
   const [error, setError] = useState<string | null>(null);
+  const [credits, setCredits] = useState<number>(0);
 
   const { isSignedIn } = useAuth();
   const { user } = useUser();
@@ -57,7 +58,7 @@ export default function Dashboard() {
   };
   
   useEffect(() => {
-    const fetchPlans = async () => {
+    const fetchUserData = async () => {
       setIsLoading(true);
       try {
         const userData = getUserData();
@@ -67,28 +68,30 @@ export default function Dashboard() {
           return;
         }
         
-        const response = await axios.post<ApiResponse>(
-          `http://localhost:5000/api/plan/`, 
-          { userData }
-        );
+        // Fetch both plans and credits in parallel
+        const [plansResponse, creditsResponse] = await Promise.all([
+          axios.post<ApiResponse>(`http://localhost:5000/api/plan/`, { userData }),
+          axios.post(`http://localhost:5000/api/auth/credits`, { userData })
+        ]);
         
-        console.log("API response:", response.data);
-        
-        // Extract and combine owned and collaborated plans
-        const ownedPlans = response.data.data.owned.map(plan => ({
+        // Handle plans data
+        const ownedPlans = plansResponse.data.data.owned.map(plan => ({
           ...plan,
-          nameoftheplace: plan.destination // Make sure nameoftheplace is set for search
+          nameoftheplace: plan.destination
         }));
         
-        const collaboratedPlans = response.data.data.collaborated.map(plan => ({
+        const collaboratedPlans = plansResponse.data.data.collaborated.map(plan => ({
           ...plan,
           nameoftheplace: plan.destination,
           isSharedPlan: true
         }));
         
-        // Combine all plans
         const allPlans = [...ownedPlans, ...collaboratedPlans];
         setPlans(allPlans);
+        
+        // Handle credits data
+        setCredits(creditsResponse.data.credits || 0);
+        console.log(credits)
       } catch (err: unknown) {
         console.error("Fetch error:", err);
         const errorMessage = 
@@ -101,7 +104,7 @@ export default function Dashboard() {
       }
     };
     
-    fetchPlans();
+    fetchUserData();
   }, [isSignedIn, user]);
 
   const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
@@ -154,7 +157,10 @@ export default function Dashboard() {
               />
             </div>
 
-            <DrawerDialog shouldOpenForCreatePlan={true} />
+            <DrawerDialog 
+              shouldOpenForCreatePlan={credits > 0} 
+              credits={credits}
+            />
           </div>
           <div className="flex h-full w-full px-4 lg:px-20 flex-1">
             <div

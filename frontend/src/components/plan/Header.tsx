@@ -3,14 +3,56 @@ import Logo from "@/components/common/Logo"; // Assuming this Logo component exi
 import {cn} from "@/lib/utils"; // Alternative to 'cn'
 // import MenuItems from "./MenuItems";
 import  {ThemeDropdown}  from "@/components/ThemeDropdown";
-import { ClerkLoading, SignedOut, SignedIn, SignInButton, UserButton } from "@clerk/clerk-react";
+import { ClerkLoading, SignedOut, SignedIn, SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 import { Loading } from "../shared/Loading";
 import DrawerWithDialog from "../shared/DrawerWithDialog";
 import FeedbackSheet from "../common/FeedbackSheet";
 import PlanComboBox from "./PlanComboBox";
-// import DrawerWithDialog from "../shared/DrawerWithDialog";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const Header = () => {
+  const [credits, setCredits] = useState<number>(0);
+  const { isSignedIn, user } = useUser();
+
+  const getUserData = () => {
+    if (!isSignedIn || !user) return null;
+    
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
+    };
+  };
+
+  useEffect(() => {
+    const fetchCredits = async () => {
+      try {
+        const userData = getUserData();
+        if (!userData) return;
+
+        const response = await axios.post(
+          'http://localhost:5000/api/auth/credits',
+          { userData }
+        );
+
+        if (response.data.success) {
+          setCredits(response.data.credits);
+        }
+      } catch (error) {
+        console.error('Error fetching credits:', error);
+      }
+    };
+
+    if (isSignedIn) {
+      fetchCredits();
+    }
+  }, [isSignedIn, user]);
 
   return (
     <header
@@ -42,7 +84,7 @@ const Header = () => {
             <SignedIn>
               <div className="flex justify-center items-center gap-2">
                 {/* <PlanComboBox /> */}
-                <DrawerWithDialog />
+                <DrawerWithDialog shouldOpenForCreatePlan={false} credits={credits} />
                 <FeedbackSheet />
                 <ThemeDropdown />
                 <UserButton  />

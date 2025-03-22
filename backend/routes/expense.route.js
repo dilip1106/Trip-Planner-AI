@@ -4,44 +4,75 @@ import Expense from '../models/expense.modal.js';
 import User from '../models/user.model.js';
 import { authenticateUser } from '../middleware/verifyAuthUser.js'; // Assuming you have auth middleware
 
+import { isValidObjectId } from 'mongoose';
+import { deleteMultipleExpenses } from '../controllers/expense.controller.js';
 const router = express.Router();
 
 // Middleware to protect all expense routes
 router.use(authenticateUser);
+
+// This is the route handler for DELETE_MULTIPLE endpoint
 
 /**
  * @route   POST /api/expenses
  * @desc    Add a new expense
  * @access  Private
  */
-router.post('/', async (req, res) => {
+router.post('/add', async (req, res) => {
   try {
     const { planId, expenses, currency } = req.body;
-    const {clerkId} = req.user;
+    const { clerkId } = req.user;
     let user = await User.findOne({ clerkId });
-
-    // Create new expense document with expense entries array
-    const newExpense = new Expense({
+    
+    // First, try to find an existing expense document for this plan and user
+    let existingExpense = await Expense.findOne({
       planId,
-      userId: user._id,
-      expenses: expenses.map(entry => ({
+      userId: user._id
+    });
+    
+    if (existingExpense) {
+      // If found, add the new expenses to the existing document
+      const newExpenseEntries = expenses.map(entry => ({
         purpose: entry.purpose,
         amount: entry.amount,
         category: entry.category,
         date: entry.date || Date.now(),
         whoSpent: entry.whoSpent
-      })),
-      currency: currency || 'INR'
-    });
-    
-    const savedExpense = await newExpense.save();
-    res.status(201).json(savedExpense);
+      }));
+      
+      // Append the new expenses to the existing array
+      existingExpense.expenses = [...existingExpense.expenses, ...newExpenseEntries];
+      
+      // Update the currency if provided
+      if (currency) {
+        existingExpense.currency = currency;
+      }
+      
+      const updatedExpense = await existingExpense.save();
+      res.status(200).json(updatedExpense);
+    } else {
+      // If not found, create a new expense document
+      const newExpense = new Expense({
+        planId,
+        userId: user._id,
+        expenses: expenses.map(entry => ({
+          purpose: entry.purpose,
+          amount: entry.amount,
+          category: entry.category,
+          date: entry.date || Date.now(),
+          whoSpent: entry.whoSpent
+        })),
+        currency: currency || 'INR'
+      });
+      
+      const savedExpense = await newExpense.save();
+      res.status(201).json(savedExpense);
+    }
   } catch (error) {
     console.error('Error adding expense:', error);
     res.status(500).json({ message: 'Failed to add expense', error: error.message });
   }
 });
-
 /**
  * @route   GET /api/expenses
  * @desc    Get all expenses (with optional filtering)
@@ -50,14 +81,12 @@ router.post('/', async (req, res) => {
 router.post('/:id/get', async (req, res) => {
   try {
     const { category, fromDate, toDate } = req.query;
-    const {clerkId} = req.user;
-    const {planId} = req.params;
-    let user = await User.findOne({ clerkId });
-    // Build filter object
-    const filter = { userId: user._id }; // Base filter by user
+    const { id: planId } = req.params;
+    
+    // Build filter object with just planId
+    const filter = { planId }; // Base filter by planId only
     
     // Add optional filters
-    if (planId) filter.planId = planId;
     if (category) filter.category = category;
     
     // Date range filter
@@ -67,15 +96,19 @@ router.post('/:id/get', async (req, res) => {
       if (toDate) filter.date.$lte = new Date(toDate);
     }
     
-    const expenses = await Expense.find(filter).sort({ date: -1 });
+    const expenses = await Expense.find(filter)
+      .sort({ date: -1 })
+      .populate('userId', 'name'); // Optionally populate user details if needed
+    
     res.status(200).json(expenses);
-    // res.status(200).json({ success: true, data: expenses });
   } catch (error) {
     console.error('Error fetching expenses:', error);
-    res.status(500).json({ message: 'Failed to fetch expenses', error: error.message });
+    res.status(500).json({ 
+      message: 'Failed to fetch expenses', 
+      error: error.message 
+    });
   }
 });
-
 /**
  * @route   GET /api/expenses/:id
  * @desc    Get a specific expense by ID
@@ -140,23 +173,7 @@ router.put('/:id', async (req, res) => {
  * @desc    Delete an expense
  * @access  Private
  */
-router.delete('/:id', async (req, res) => {
-  try {
-    const deletedExpense = await Expense.findOneAndDelete({
-      _id: req.params.id,
-      userId: req.user.id
-    });
-    
-    if (!deletedExpense) {
-      return res.status(404).json({ message: 'Expense not found or unauthorized' });
-    }
-    
-    res.status(200).json({ message: 'Expense deleted successfully', id: req.params.id });
-  } catch (error) {
-    console.error('Error deleting expense:', error);
-    res.status(500).json({ message: 'Failed to delete expense', error: error.message });
-  }
-});
+router.post('/:id/delete-multiple', deleteMultipleExpenses);
 
 /**
  * @route   GET /api/expenses/plan/:planId

@@ -65,11 +65,11 @@ interface Expense {
 // Form schema using Zod
 const formSchema = z.object({
   expenses: z.array(z.object({
-    purpose: z.string().min(2).max(50),
-    amount: z.coerce.number(),
+    purpose: z.string().min(2, { message: "Purpose must be at least 2 characters" }).max(50),
+    amount: z.coerce.number().min(0, { message: "Amount must be positive" }),
     category: z.enum(["food", "commute", "shopping", "gifts", "accomodations", "others"]),
     date: z.date(),
-    whoSpent: z.string()
+    whoSpent: z.string().min(1, { message: "Please select who spent the money" })
   })),
   currency: z.string().default('INR')
 });
@@ -93,23 +93,25 @@ export default function ExpenseSheet({
   preferredCurrency,
 }: ExpenseSheetProps) {
   const [open, setOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<string>('');
   const { user } = useUser();
   const { isSignedIn } = useUser();
   
-    const getUserData = () => {
-      if (!isSignedIn || !user) return null;
-      
-      const primaryEmail = user.emailAddresses.find(
-        email => email.id === user.primaryEmailAddressId
-      )?.emailAddress;
-  
-      return {
-        clerkId: user.id,
-        email: primaryEmail || "",
-        name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
-        image: user.imageUrl
-      };
+  const getUserData = () => {
+    if (!isSignedIn || !user) return null;
+    
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
     };
+  };
+  
   // Set up form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -125,6 +127,20 @@ export default function ExpenseSheet({
     }
   });
 
+  // Set initial user when component mounts
+  useEffect(() => {
+    if (user && user.id) {
+      setSelectedUser(user.id);
+      form.setValue("expenses.0.whoSpent", user.id);
+    }
+  }, [user, form]);
+
+  // Handle setting the user
+  const handleUserSelect = (userId: string) => {
+    setSelectedUser(userId);
+    form.setValue("expenses.0.whoSpent", userId);
+  };
+
   // Populate form with existing data when editing
   useEffect(() => {
     if (!edit || !data) return;
@@ -136,6 +152,7 @@ export default function ExpenseSheet({
       form.setValue("expenses.0.amount", expense.amount);
       form.setValue("expenses.0.category", expense.category);
       form.setValue("expenses.0.whoSpent", expense.whoSpent);
+      setSelectedUser(expense.whoSpent);
       form.setValue("expenses.0.date", new Date(expense.date));
     }
   }, [edit, data, form]);
@@ -149,11 +166,23 @@ export default function ExpenseSheet({
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user || !user.id) return;
    
-      const userData = getUserData();
+    const userData = getUserData();
       
-      if (!userData) {
-        return;
-      }
+    if (!userData) {
+      return;
+    }
+    
+    // Make sure the form has the latest selected user
+    values.expenses[0].whoSpent = selectedUser;
+    
+    if (!values.expenses[0].whoSpent) {
+      form.setError("expenses.0.whoSpent", {
+        type: "manual",
+        message: "Please select who spent the money"
+      });
+      return;
+    }
+    
     try {
       if (edit && data) {
         // Update existing expense
@@ -164,7 +193,7 @@ export default function ExpenseSheet({
         });
       } else {
         // Create new expense
-        await axios.post('http://localhost:5000/api/expense/', {
+        await axios.post('http://localhost:5000/api/expense/add', {
           planId,
           userData,
           expenses: values.expenses,
@@ -176,8 +205,7 @@ export default function ExpenseSheet({
       form.reset();
       setOpen(false);
       
-      // Refresh the page or update the list (you might want to use state management or context instead)
-      // For simplicity, I'm using a page reload here
+      // Refresh the page or update the list
       window.location.reload();
     } catch (error) {
       console.error("Error saving expense:", error);
@@ -230,26 +258,32 @@ export default function ExpenseSheet({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="expenses.0.whoSpent"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Who Spent</FormLabel>
-                  <FormControl>
-                    <Select onValueChange={field.onChange} value={field.value || undefined}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a User" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <UserDropdown userId={user!.id} planId={planId} />
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+            
+            {/* Custom User Selection Field */}
+            <FormItem>
+              <FormLabel>Who Spent</FormLabel>
+              <Select 
+                value={selectedUser} 
+                onValueChange={handleUserSelect}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a User" />
+                </SelectTrigger>
+                <SelectContent>
+                  <UserDropdown 
+                    userId={user?.id || ''} 
+                    planId={planId} 
+                    onSelect={handleUserSelect}
+                  />
+                </SelectContent>
+              </Select>
+              {form.formState.errors.expenses?.[0]?.whoSpent && (
+                <p className="text-sm font-medium text-red-500 mt-1">
+                  {form.formState.errors.expenses[0].whoSpent.message}
+                </p>
               )}
-            />
+            </FormItem>
+            
             <FormField
               control={form.control}
               name="expenses.0.category"

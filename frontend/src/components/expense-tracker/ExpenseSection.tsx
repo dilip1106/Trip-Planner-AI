@@ -13,6 +13,7 @@ interface ExpenseEntry {
   category: "food" | "commute" | "shopping" | "gifts" | "accomodations" | "others";
   date: string;
   whoSpent: string;
+  _id: string;
 }
 
 interface Expense {

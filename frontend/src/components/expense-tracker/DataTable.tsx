@@ -1,4 +1,7 @@
-import { useState } from "react";
+"use client";
+
+import { useState, useEffect } from "react";
+import axios from "axios";
 import { ChevronDownIcon } from "@radix-ui/react-icons";
 import {
   ColumnDef,
@@ -31,20 +34,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getColumns } from "@/components/expense-tracker/DataColumns";
-import axios from "axios";
-import { useAuth } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
+import { useParams } from "react-router-dom";
 
-// Define the Expense type to replace the Convex Doc type
-interface ExpenseEntry {
+// Define interface for Expense based on the structure in ExpenseSection
+export interface ExpenseEntry {
   purpose: string;
   amount: number;
   category: "food" | "commute" | "shopping" | "gifts" | "accomodations" | "others";
   date: string;
   whoSpent: string;
-  _id: string; // Add _id for individual expense entries
+  _id: string;
 }
 
-export interface Expense {
+interface Expense {
   _id: string;
   planId: string;
   userId: string;
@@ -54,144 +57,115 @@ export interface Expense {
   updatedAt?: string;
 }
 
-// Create a flattened structure for the table
-interface FlattenedExpense {
-  _id: string;
-  expenseId: string; // To store the individual expense entry ID
-  planId: string;
-  userId: string;
-  purpose: string;
-  amount: number;
-  category: string;
-  date: string;
-  whoSpent: string;
-  currency: string;
-}
-
 export default function DataTable({
   data,
   preferredCurrency,
-  onDataChange,
 }: {
-  preferredCurrency: string;
   data: Expense[];
-  onDataChange?: () => void; // Callback to refresh data after operations
+  preferredCurrency: string;
 }) {
-  const { getToken } = useAuth();
+  const [tableData, setTableData] = useState<ExpenseEntry[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
+  const { isSignedIn, user } = useUser();
+  const {planId} = useParams();
+  const getUserData = () => {
+    if (!isSignedIn || !user) return null;
+    
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
 
-  // Flatten the expenses array for the table
-  const flattenedData: FlattenedExpense[] = data.flatMap((expense) => 
-    expense.expenses.map((entry) => ({
-      _id: expense._id,
-      expenseId: entry._id || '', // Use the nested expense ID
-      planId: expense.planId,
-      userId: expense.userId,
-      purpose: entry.purpose,
-      amount: entry.amount,
-      category: entry.category,
-      date: entry.date,
-      whoSpent: entry.whoSpent,
-      currency: expense.currency || preferredCurrency,
-    }))
-  );
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
+    };
+  };
+  // Process the expenses data to flatten it for the table
+  useEffect(() => {
+    if (data && data.length > 0) {
+      // Flatten the nested expenses array from all expense documents
+      const flattenedExpenses = data.flatMap(expenseDoc => 
+        expenseDoc.expenses.map(expense => ({
+          ...expense,
+          expenseDocId: expenseDoc._id // Keep track of parent document
+        }))
+      );
+      setTableData(flattenedExpenses);
+    } else {
+      setTableData([]);
+    }
+  }, [data]);
 
-  // Function to delete multiple expenses
-  const deleteMultipleExpenses = async (ids: string[]) => {
+  // Delete expense functionality (modified to work with your data structure)
+  const deleteExpense = async (expenseId: string, expenseDocId: string) => {
     try {
-      const token = await getToken();
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/api/expenses/batch`, {
-        data: { ids },
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const userData = getUserData();
+        
+        if (!userData) {
+          return;
+        }
+      setLoading(true);
+      // This is a placeholder - you'll need to implement the actual API call
+      // based on your backend structure
+      await axios.post(`/api/expense/delete`, { 
+        expenseId,
+        expenseDocId,
+        userData
       });
-      if (onDataChange) onDataChange();
-    } catch (error) {
-      console.error("Failed to delete expenses:", error);
+      
+      // Update the local state to remove the deleted expense
+      setTableData(prevData => 
+        prevData.filter(expense => expense._id !== expenseId)
+      );
+      
+      setError(null);
+    } catch (err) {
+      setError("Failed to delete expense");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Explicitly define columns for the flattened structure
-  const columns: ColumnDef<FlattenedExpense, any>[] = [
-    {
-      id: "select",
-      header: ({ table }) => (
-        <input
-          type="checkbox"
-          checked={table.getIsAllPageRowsSelected()}
-          onChange={(e) => table.toggleAllPageRowsSelected(!!e.target.checked)}
-          aria-label="Select all"
-        />
-      ),
-      cell: ({ row }) => (
-        <input
-          type="checkbox"
-          checked={row.getIsSelected()}
-          onChange={(e) => row.toggleSelected(!!e.target.checked)}
-          aria-label="Select row"
-        />
-      ),
-    },
-    {
-      accessorKey: "purpose",
-      header: "Purpose",
-      cell: ({ row }) => <div>{row.getValue("purpose")}</div>,
-    },
-    {
-      accessorKey: "amount",
-      header: "Amount",
-      cell: ({ row }) => {
-        const amount = parseFloat(row.getValue("amount"));
-        const currency = row.original.currency || preferredCurrency;
+  // Delete multiple expenses
+  const deleteMultipleExpenses = async (ids: { expenseId: string, expenseDocId: string }[]) => {
+    try {
+      setLoading(true);
+      const userData = getUserData();
         
-        // Format the amount as currency
-        const formatted = new Intl.NumberFormat('en-US', {
-          style: 'currency',
-          currency: currency,
-        }).format(amount);
-        
-        return <div className="font-medium">{formatted}</div>;
-      },
-    },
-    {
-      accessorKey: "category",
-      header: "Category",
-      cell: ({ row }) => <div className="capitalize">{row.getValue("category")}</div>,
-    },
-    {
-      accessorKey: "date",
-      header: "Date",
-      cell: ({ row }) => {
-        const date = new Date(row.getValue("date"));
-        return <div>{date.toLocaleDateString()}</div>;
-      },
-    },
-    {
-      accessorKey: "whoSpent",
-      header: "Who Spent",
-      cell: ({ row }) => <div>{row.getValue("whoSpent")}</div>,
-    },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => (
-        <Button 
-          variant="destructive" 
-          size="sm"
-          onClick={() => deleteMultipleExpenses([row.original.expenseId])}
-        >
-          Delete
-        </Button>
-      ),
-    },
-  ];
+        if (!userData) {
+          return;
+        }
+      // Placeholder for bulk delete API call
+      await axios.post(`http://localhost:5000/api/expense/${planId}/delete-multiple`, { ids,userData });
+      
+      // Update local state
+      setTableData(prevData => 
+        prevData.filter(expense => !ids.some(id => id.expenseId === expense._id))
+      );
+      
+      return true;
+    } catch (err) {
+      setError("Failed to delete expenses");
+      console.error(err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const table = useReactTable({
-    data: flattenedData,
+  // const columns = getColumns(preferredCurrency);
+  const columns = getColumns(preferredCurrency) as ColumnDef<ExpenseEntry, any>[];
+  const table = useReactTable<ExpenseEntry>({
+    data: tableData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -211,12 +185,27 @@ export default function DataTable({
 
   const selectedRows = table.getSelectedRowModel().rows;
 
-  const deleteSelectedRows = async (rows: Row<FlattenedExpense>[]) => {
+  const deleteSelectedRows = async (rows: Row<ExpenseEntry>[]) => {
     if (rows.length <= 0) return;
 
-    await deleteMultipleExpenses(rows.map((r) => r.original.expenseId));
-    table.resetRowSelection();
+    const idsToDelete = rows.map((r) => ({
+      expenseId: r.original._id,
+      expenseDocId: (r.original as any).expenseDocId // Access the added expenseDocId
+    }));
+
+    const success = await deleteMultipleExpenses(idsToDelete);
+    if (success) {
+      table.resetRowSelection();
+    }
   };
+
+  if (loading) {
+    return <div className="flex justify-center p-4">Loading expenses...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 p-4">{error}</div>;
+  }
 
   return (
     <>

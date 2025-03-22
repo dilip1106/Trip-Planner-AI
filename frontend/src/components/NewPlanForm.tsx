@@ -151,7 +151,7 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
           description: "AI plan generated successfully",
         });
         
-        navigate(`/plan/${response.data._id}/plan`);
+        navigate(`/plan/${response.data.data._id}/plan`);
       } catch (error) {
         console.error("Error generating AI plan:", error);
         toast({

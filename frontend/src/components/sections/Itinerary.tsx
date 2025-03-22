@@ -1,8 +1,6 @@
-import { useState, useEffect } from "react";
 import Timeline from "@/components/Timeline";
 import SectionWrapper from "@/components/sections/SectionWrapper";
 import { AddIternaryDay } from "@/components/addNewItineraryDay/AddIternaryDay";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Navigation } from "lucide-react";
 import { useQuery, useQueryClient } from "react-query";

@@ -17,7 +17,6 @@ type ImageSectionProps = {
 };
 
 export default function ImageSection({
-  userPrompt,
   companion,
   activityPreferences,
   fromDate,
@@ -25,9 +24,7 @@ export default function ImageSection({
   placeName,
   // imageUrl,
   destinationImage,
-  isLoading,
-  allowEdit,
-  planId,
+  isLoading
 }: ImageSectionProps) {
   return (
     <SectionWrapper id="imagination">

@@ -12,6 +12,10 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
+  credits:{
+    type: Number,
+    default: 5
+  },
   name: {
     type: String,
     required: true
