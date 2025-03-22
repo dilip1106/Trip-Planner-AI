@@ -5,6 +5,8 @@ import ExpenseMetrics from "@/components/expense-tracker/ExpenseMetrics";
 import ExpenseSheet from "@/components/expense-tracker/ExpenseSheet";
 import axios from 'axios';
 
+import { useUser } from "@clerk/clerk-react";
+
 interface Expense {
   _id: string;
   planId: string;
@@ -25,13 +27,43 @@ const ExpenseSection: React.FC<ExpenseSectionProps> = ({ planId }) => {
   const [data, setData] = useState<Expense[] | null>(null);
   const [preferredCurrency, setPreferredCurrency] = useState<string>("INR");
   const [loading, setLoading] = useState<boolean>(true);
+  const { isSignedIn, user } = useUser();
 
+  const getUserData = () => {
+    if (!isSignedIn || !user) return null;
+    
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
+    };
+  };
   useEffect(() => {
     // Fetch expenses
     const fetchExpenses = async () => {
       try {
-        const response = await axios.get(`/api/expenses/${planId}`);
-        setData(response.data);
+        const userData = getUserData();
+        
+        if (!userData) {
+          return;
+        }
+        const response = await axios.post(`http://localhost:5000/api/expense/${planId}/get`,{userData});
+        // Check if response.data is an array before setting it
+    if (Array.isArray(response.data)) {
+      setData(response.data);
+      console.log("Expenses data:", response.data);
+    } else {
+      console.error("Unexpected response format:", response.data);
+      setData([]); // Set empty array as fallback
+    }
+        
+        // setData(response.data);
+        // console.log(response.data)
         setLoading(false);
       } catch (error) {
         console.error("Error fetching expenses:", error);
@@ -41,15 +73,24 @@ const ExpenseSection: React.FC<ExpenseSectionProps> = ({ planId }) => {
 
     // Fetch preferred currency
     const fetchCurrency = async () => {
-      try {
-        const response = await axios.get(`/api/plan-settings/${planId}/currency`);
-        if (response.data && response.data.preferredCurrency) {
-          setPreferredCurrency(response.data.preferredCurrency);
-        }
-      } catch (error) {
-        console.error("Error fetching preferred currency:", error);
-      }
-    };
+          try {
+            const userData = getUserData();
+            
+            if (!userData) {
+              return;
+            }
+            
+            const response = await axios.post(
+              `http://localhost:5000/api/plan/${planId}/currency`,
+              { userData }
+            );
+    
+            const currency = response.data.preferredCurrency;
+            setPreferredCurrency(currency);
+          } catch (err) {
+            console.error("Error fetching preferred currency:", err);
+          }
+        };
 
     fetchExpenses();
     fetchCurrency();
@@ -213,10 +254,10 @@ const ExpenseSection: React.FC<ExpenseSectionProps> = ({ planId }) => {
             preferredCurrency={preferredCurrency}
           />
         </div>
-        <ExpenseMetrics
+        {/* <ExpenseMetrics
           expenses={data}
           preferredCurrency={preferredCurrency}
-        />
+        /> */}
         <DataTable data={data} preferredCurrency={preferredCurrency} />
       </>
     );

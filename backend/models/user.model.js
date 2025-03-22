@@ -19,10 +19,7 @@ const userSchema = new mongoose.Schema({
   image: {
     type: String
   },
-  preferredCurrency: {
-    type: String,
-    default: 'INR' // Default to INR as mentioned in your component
-  },
+  // Removed preferredCurrency from here
   // Plans owned by this user
   plans: [{
     type: mongoose.Schema.Types.ObjectId,

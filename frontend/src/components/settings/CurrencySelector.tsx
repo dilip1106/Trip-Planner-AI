@@ -81,7 +81,7 @@ const CurrencySelector = ({ planId }: CurrencySelectorProps) => {
         }
         
         const response = await axios.post(
-          `http://localhost:5000/api/auth/currency`,
+          `http://localhost:5000/api/plan/${planId}/currency`,
           { userData }
         );
 
@@ -114,7 +114,7 @@ const CurrencySelector = ({ planId }: CurrencySelectorProps) => {
       }
       
       await axios.post(
-        `http://localhost:5000/api/auth/currency/update`,
+        `http://localhost:5000/api/plan/${planId}/currency/update`,
         {
           userData,
           currencyCode: values.currency,

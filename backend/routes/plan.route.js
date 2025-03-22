@@ -99,4 +99,73 @@ router.post('/:planId/check-access', async (req, res) => {
     });
   }
 });
+
+// Get user's default currency
+router.post('/:id/currency', authenticateUser, async (req, res) => {
+  try {
+    const planId = req.params.id;
+    
+    // Find the specific plan by its ID
+    const plan = await Plan.findById(planId);
+    
+    if (!plan) {
+      return res.status(404).json({ error: 'Plan not found' });
+    }
+    
+    // Return the currency from this specific plan
+    return res.status(200).json({
+      preferredCurrency: plan.currency || 'INR'
+    });
+    
+  } catch (error) {
+    console.error('Error fetching plan currency:', error);
+    return res.status(500).json({ error: 'Failed to fetch plan currency' });
+  }
+});
+
+// Update currency for a specific plan
+router.post('/:id/currency/update', authenticateUser, async (req, res) => {
+  try {
+    const planId = req.params.id;
+    const { currencyCode } = req.body;
+    const { clerkId } = req.user; // Assuming authenticateUser adds user info
+    
+    if (!currencyCode) {
+      return res.status(400).json({ error: 'Currency code is required' });
+    }
+    
+    // Find plan by ID first
+    const plan = await Plan.findById(planId);
+    
+    if (!plan) {
+      return res.status(404).json({ error: 'Plan not found' });
+    }
+    
+    // Check permissions
+    if (plan.clerkUserId !== clerkId) {
+      const isCollaborator = plan.collaborators?.some(
+        collab => collab.clerkUserId === clerkId && collab.status === 'accepted'
+      );
+      
+      if (!isCollaborator) {
+        return res.status(403).json({ error: 'You do not have permission to update this plan' });
+      }
+    }
+    
+    plan.currency = currencyCode;
+    await plan.save();
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Currency updated successfully for this plan',
+      currency: plan.currency
+    });
+  } catch (error) {
+    console.error('Error updating plan currency:', error);
+    return res.status(500).json({ 
+      success: false,
+      error: 'Failed to update plan currency' 
+    });
+  }
+});
 export default router;

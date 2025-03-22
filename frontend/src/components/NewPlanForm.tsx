@@ -103,7 +103,7 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
           description: "Empty plan created successfully",
         });
         
-        navigate(`/plan/${response.data._id}`);
+        navigate(`/plan/${response.data._id}/plan`);
       } catch (error) {
         console.error("Error creating empty plan:", error);
         toast({
@@ -151,7 +151,7 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
           description: "AI plan generated successfully",
         });
         
-        navigate(`/plan/${response.data._id}`);
+        navigate(`/plan/${response.data._id}/plan`);
       } catch (error) {
         console.error("Error generating AI plan:", error);
         toast({

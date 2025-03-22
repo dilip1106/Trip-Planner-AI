@@ -293,7 +293,7 @@ export const inviteCollaborator = async (req, res) => {
     await plan.save();
     
     // Send invitation email with correct parameters
-    const inviteUrl = `http://localhost:5173/plans/invite/accept/${inviteToken}`;
+    const inviteUrl = `http://localhost:5173/dashboard/${inviteToken}`;
     
     const emailResult = await sendMail({
       to: email,

@@ -15,6 +15,11 @@ const planSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  // Add currency field to each plan
+  currency: {
+    type: String,
+    default: 'INR'
+  },
   fromDate: {
     type: Date
   },
@@ -48,7 +53,6 @@ const planSchema = new mongoose.Schema({
   topPlacesToVisit: {
     type: Array
   },
-  // Add image field
   destinationImage: {
     type: String, // Store base64 encoded image
     default: ""
@@ -72,7 +76,6 @@ const planSchema = new mongoose.Schema({
     inviteToken: String,
     inviteExpires: Date
   }],
-  // Add timestamps
   createdAt: {
     type: Date,
     default: Date.now

@@ -90,7 +90,22 @@ export default function ExpenseSheet({
 }: ExpenseSheetProps) {
   const [open, setOpen] = useState(false);
   const { user } = useUser();
+  const { isSignedIn } = useUser();
   
+    const getUserData = () => {
+      if (!isSignedIn || !user) return null;
+      
+      const primaryEmail = user.emailAddresses.find(
+        email => email.id === user.primaryEmailAddressId
+      )?.emailAddress;
+  
+      return {
+        clerkId: user.id,
+        email: primaryEmail || "",
+        name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+        image: user.imageUrl
+      };
+    };
   // Set up form
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -122,7 +137,12 @@ export default function ExpenseSheet({
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (!user || !user.id) return;
-    
+   
+      const userData = getUserData();
+      
+      if (!userData) {
+        return;
+      }
     try {
       if (edit && data) {
         // Update existing expense
@@ -135,13 +155,14 @@ export default function ExpenseSheet({
         });
       } else {
         // Create new expense
-        await axios.post('/api/expenses', {
+        await axios.post('http://localhost:5000/api/expense/', {
           planId: planId,
           userId: values.userId,
           amount: values.amount,
           category: values.category,
           purpose: values.purpose,
           date: values.date.toISOString(),
+          userData
         });
       }
       

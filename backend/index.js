@@ -8,7 +8,7 @@ import { connectDB } from "./db/connectDB.js";
 
 import authRoutes from "./routes/auth.route.js";
 import planRoutes from "./routes/plan.route.js";
-
+import expenseRoutes from "./routes/expense.route.js";
 dotenv.config();
 
 const app = express();
@@ -22,6 +22,8 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/plan", planRoutes);
+app.use("/api/expense", expenseRoutes);
+
 app.use(express.static(path.join(__dirname, "/frontend/dist")));
 
 app.get("*", (req, res) => {
