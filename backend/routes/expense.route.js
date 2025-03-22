@@ -16,18 +16,21 @@ router.use(authenticateUser);
  */
 router.post('/', async (req, res) => {
   try {
-    const { planId, purpose, amount, category, date, whoSpent, currency } = req.body;
+    const { planId, expenses, currency } = req.body;
     const {clerkId} = req.user;
     let user = await User.findOne({ clerkId });
-    // Create new expense with user ID from authenticated user
+
+    // Create new expense document with expense entries array
     const newExpense = new Expense({
       planId,
-      userId:user._id, // Assuming auth middleware adds user to req
-      purpose,
-      amount,
-      category,
-      date: date || Date.now(),
-      whoSpent,
+      userId: user._id,
+      expenses: expenses.map(entry => ({
+        purpose: entry.purpose,
+        amount: entry.amount,
+        category: entry.category,
+        date: entry.date || Date.now(),
+        whoSpent: entry.whoSpent
+      })),
       currency: currency || 'INR'
     });
     
@@ -103,12 +106,21 @@ router.get('/:id', async (req, res) => {
  */
 router.put('/:id', async (req, res) => {
   try {
-    const { purpose, amount, category, date, whoSpent, currency } = req.body;
+    const { expenses, currency } = req.body;
     
-    // Find and update the expense
+    // Find and update the expense document
     const updatedExpense = await Expense.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.id },
-      { purpose, amount, category, date, whoSpent, currency },
+      { 
+        expenses: expenses.map(entry => ({
+          purpose: entry.purpose,
+          amount: entry.amount,
+          category: entry.category,
+          date: entry.date,
+          whoSpent: entry.whoSpent
+        })),
+        currency 
+      },
       { new: true, runValidators: true }
     );
     
@@ -173,10 +185,17 @@ router.get('/plan/:planId', async (req, res) => {
 router.get('/summary/plan/:planId', async (req, res) => {
   try {
     const summary = await Expense.aggregate([
-      { $match: { planId: mongoose.Types.ObjectId(req.params.planId), userId: mongoose.Types.ObjectId(req.user.id) } },
-      { $group: {
-          _id: "$category",
-          totalAmount: { $sum: "$amount" },
+      { 
+        $match: { 
+          planId: mongoose.Types.ObjectId(req.params.planId), 
+          userId: mongoose.Types.ObjectId(req.user.id) 
+        } 
+      },
+      { $unwind: "$expenses" },
+      { 
+        $group: {
+          _id: "$expenses.category",
+          totalAmount: { $sum: "$expenses.amount" },
           count: { $sum: 1 }
         }
       }

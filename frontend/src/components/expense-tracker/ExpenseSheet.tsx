@@ -44,30 +44,34 @@ import {
 import { Calendar } from '@/components/ui/calendar';
 
 // Type for Expense
+interface ExpenseEntry {
+  purpose: string;
+  amount: number;
+  category: "food" | "commute" | "shopping" | "gifts" | "accomodations" | "others";
+  date: string;
+  whoSpent: string;
+}
+
 interface Expense {
   _id: string;
   planId: string;
   userId: string;
-  purpose: string;
-  amount: number;
-  category: string;
-  date: string;
+  expenses: ExpenseEntry[];
+  currency: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Form schema using Zod
 const formSchema = z.object({
-  purpose: z.string().min(2).max(50),
-  category: z.union([
-    z.literal("commute"),
-    z.literal("food"),
-    z.literal("shopping"),
-    z.literal("gifts"),
-    z.literal("accomodations"),
-    z.literal("others"),
-  ]),
-  amount: z.coerce.number(),
-  date: z.date(),
-  userId: z.string(),
+  expenses: z.array(z.object({
+    purpose: z.string().min(2).max(50),
+    amount: z.coerce.number(),
+    category: z.enum(["food", "commute", "shopping", "gifts", "accomodations", "others"]),
+    date: z.date(),
+    whoSpent: z.string()
+  })),
+  currency: z.string().default('INR')
 });
 
 // Helper function for class names
@@ -110,11 +114,14 @@ export default function ExpenseSheet({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      purpose: '',
-      amount: 0,
-      category: 'others',
-      userId: user?.id || '',
-      date: new Date(),
+      expenses: [{
+        purpose: '',
+        amount: 0,
+        category: 'others',
+        whoSpent: user?.id || '',
+        date: new Date(),
+      }],
+      currency: preferredCurrency || 'INR'
     }
   });
 
@@ -122,11 +129,15 @@ export default function ExpenseSheet({
   useEffect(() => {
     if (!edit || !data) return;
     
-    form.setValue("purpose", data.purpose);
-    form.setValue("amount", data.amount);
-    form.setValue("category", data.category as any);
-    form.setValue("userId", data.userId);
-    form.setValue("date", new Date(data.date));
+    const expense = data.expenses[0]; // Assuming we're editing the first expense
+    
+    if (expense) {
+      form.setValue("expenses.0.purpose", expense.purpose);
+      form.setValue("expenses.0.amount", expense.amount);
+      form.setValue("expenses.0.category", expense.category);
+      form.setValue("expenses.0.whoSpent", expense.whoSpent);
+      form.setValue("expenses.0.date", new Date(expense.date));
+    }
   }, [edit, data, form]);
 
   // Get currency symbol
@@ -146,23 +157,18 @@ export default function ExpenseSheet({
     try {
       if (edit && data) {
         // Update existing expense
-        await axios.put(`/api/expenses/${data._id}`, {
-          amount: values.amount,
-          category: values.category,
-          purpose: values.purpose,
-          date: values.date.toISOString(),
-          userId: values.userId,
+        await axios.put(`http://localhost:5000/api/expense/${data._id}`, {
+          userData,
+          expenses: values.expenses,
+          currency: values.currency
         });
       } else {
         // Create new expense
         await axios.post('http://localhost:5000/api/expense/', {
-          planId: planId,
-          userId: values.userId,
-          amount: values.amount,
-          category: values.category,
-          purpose: values.purpose,
-          date: values.date.toISOString(),
-          userData
+          planId,
+          userData,
+          expenses: values.expenses,
+          currency: values.currency
         });
       }
       
@@ -183,7 +189,7 @@ export default function ExpenseSheet({
       <SheetTrigger asChild>
         {edit ? (
           <span className="hover:underline hover:underline-offset-2 text-blue-600 hover:font-medium cursor-pointer">
-            {data?.purpose}
+            {data?.expenses[0]?.purpose}
           </span>
         ) : (
           <Button
@@ -210,7 +216,7 @@ export default function ExpenseSheet({
           >
             <FormField
               control={form.control}
-              name="purpose"
+              name="expenses.0.purpose"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>For</FormLabel>
@@ -226,7 +232,7 @@ export default function ExpenseSheet({
             />
             <FormField
               control={form.control}
-              name="userId"
+              name="expenses.0.whoSpent"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Who Spent</FormLabel>
@@ -246,7 +252,7 @@ export default function ExpenseSheet({
             />
             <FormField
               control={form.control}
-              name="category"
+              name="expenses.0.category"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
@@ -273,7 +279,7 @@ export default function ExpenseSheet({
             />
             <FormField
               control={form.control}
-              name="amount"
+              name="expenses.0.amount"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Amount({currency})</FormLabel>
@@ -290,7 +296,7 @@ export default function ExpenseSheet({
             />
             <FormField
               control={form.control}
-              name="date"
+              name="expenses.0.date"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>On</FormLabel>

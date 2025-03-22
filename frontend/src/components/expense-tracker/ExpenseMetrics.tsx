@@ -3,7 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 // import { DollarSignIcon } from "lucide-react";
 import { expenseCategories } from "@/lib/constants";
 import { cn } from "@/lib/utils";
-import { Expense } from "@/components/expense-tracker/DataColumns";
+interface Expense {
+  amount: number;
+  category: 'food' | 'commute' | 'shopping' | 'gifts' | 'accomodations' | 'others';
+}
 
 interface ExpenseMetricsProps {
   preferredCurrency: string;

@@ -35,16 +35,37 @@ import axios from "axios";
 import { useAuth } from "@clerk/clerk-react";
 
 // Define the Expense type to replace the Convex Doc type
-export interface Expense {
-  _id: string;
+interface ExpenseEntry {
   purpose: string;
   amount: number;
-  currency: string;
+  category: "food" | "commute" | "shopping" | "gifts" | "accomodations" | "others";
   date: string;
-  category: string;
-  userId: string;
   whoSpent: string;
-  // Add any other fields that your expense model has
+  _id: string; // Add _id for individual expense entries
+}
+
+export interface Expense {
+  _id: string;
+  planId: string;
+  userId: string;
+  expenses: ExpenseEntry[];
+  currency: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// Create a flattened structure for the table
+interface FlattenedExpense {
+  _id: string;
+  expenseId: string; // To store the individual expense entry ID
+  planId: string;
+  userId: string;
+  purpose: string;
+  amount: number;
+  category: string;
+  date: string;
+  whoSpent: string;
+  currency: string;
 }
 
 export default function DataTable({
@@ -62,6 +83,22 @@ export default function DataTable({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = useState({});
 
+  // Flatten the expenses array for the table
+  const flattenedData: FlattenedExpense[] = data.flatMap((expense) => 
+    expense.expenses.map((entry) => ({
+      _id: expense._id,
+      expenseId: entry._id || '', // Use the nested expense ID
+      planId: expense.planId,
+      userId: expense.userId,
+      purpose: entry.purpose,
+      amount: entry.amount,
+      category: entry.category,
+      date: entry.date,
+      whoSpent: entry.whoSpent,
+      currency: expense.currency || preferredCurrency,
+    }))
+  );
+
   // Function to delete multiple expenses
   const deleteMultipleExpenses = async (ids: string[]) => {
     try {
@@ -78,11 +115,83 @@ export default function DataTable({
     }
   };
 
-  // Explicitly type the columns as ColumnDef<Expense, any>[]
-  const columns = getColumns(preferredCurrency) as ColumnDef<Expense, any>[];
+  // Explicitly define columns for the flattened structure
+  const columns: ColumnDef<FlattenedExpense, any>[] = [
+    {
+      id: "select",
+      header: ({ table }) => (
+        <input
+          type="checkbox"
+          checked={table.getIsAllPageRowsSelected()}
+          onChange={(e) => table.toggleAllPageRowsSelected(!!e.target.checked)}
+          aria-label="Select all"
+        />
+      ),
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          checked={row.getIsSelected()}
+          onChange={(e) => row.toggleSelected(!!e.target.checked)}
+          aria-label="Select row"
+        />
+      ),
+    },
+    {
+      accessorKey: "purpose",
+      header: "Purpose",
+      cell: ({ row }) => <div>{row.getValue("purpose")}</div>,
+    },
+    {
+      accessorKey: "amount",
+      header: "Amount",
+      cell: ({ row }) => {
+        const amount = parseFloat(row.getValue("amount"));
+        const currency = row.original.currency || preferredCurrency;
+        
+        // Format the amount as currency
+        const formatted = new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: currency,
+        }).format(amount);
+        
+        return <div className="font-medium">{formatted}</div>;
+      },
+    },
+    {
+      accessorKey: "category",
+      header: "Category",
+      cell: ({ row }) => <div className="capitalize">{row.getValue("category")}</div>,
+    },
+    {
+      accessorKey: "date",
+      header: "Date",
+      cell: ({ row }) => {
+        const date = new Date(row.getValue("date"));
+        return <div>{date.toLocaleDateString()}</div>;
+      },
+    },
+    {
+      accessorKey: "whoSpent",
+      header: "Who Spent",
+      cell: ({ row }) => <div>{row.getValue("whoSpent")}</div>,
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <Button 
+          variant="destructive" 
+          size="sm"
+          onClick={() => deleteMultipleExpenses([row.original.expenseId])}
+        >
+          Delete
+        </Button>
+      ),
+    },
+  ];
 
   const table = useReactTable({
-    data,
+    data: flattenedData,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -102,10 +211,10 @@ export default function DataTable({
 
   const selectedRows = table.getSelectedRowModel().rows;
 
-  const deleteSelectedRows = async (rows: Row<Expense>[]) => {
+  const deleteSelectedRows = async (rows: Row<FlattenedExpense>[]) => {
     if (rows.length <= 0) return;
 
-    await deleteMultipleExpenses(rows.map((r) => r.original._id));
+    await deleteMultipleExpenses(rows.map((r) => r.original.expenseId));
     table.resetRowSelection();
   };
 

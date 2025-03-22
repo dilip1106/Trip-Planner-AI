@@ -1,4 +1,3 @@
-// import React from 'react';
 import ExpenseSheet from "@/components/expense-tracker/ExpenseSheet";
 import { expenseCategories } from "@/lib/constants";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -7,34 +6,38 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import DropDownActions from "@/components/expense-tracker/DropDownActions";
 
-export interface Expense {
-  _id: string;
-  planId: string;
+// Update interfaces to match the model
+export interface ExpenseEntry {
+  planId: string | undefined;
   purpose: string;
-  category: "food" | "commute" | "shopping" | "gifts" | "accomodations" | "others";
   amount: number;
-  currency: string;
+  category: "food" | "commute" | "shopping" | "gifts" | "accomodations" | "others";
   date: string;
-  userId: string;
   whoSpent: string;
 }
 
-// Fix: Update the DropdownActionsProps to match your DropDownActions component
+export interface Expense {
+  _id: string;
+  planId: string;
+  userId: string;
+  expenses: ExpenseEntry[];
+  currency: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface DropdownActionsProps {
   row: { original: Expense };
   onDataChange?: () => void;
 }
 
-export const getColumns = (currency: string): ColumnDef<Expense, any>[] => {
+export const getColumns = (currency: string): ColumnDef<ExpenseEntry, any>[] => {
   return [
     {
       id: "select",
       header: ({ table }) => (
         <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
+          checked={table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
         />
@@ -52,38 +55,47 @@ export const getColumns = (currency: string): ColumnDef<Expense, any>[] => {
     {
       accessorKey: "purpose",
       header: () => <div className="text-left">For</div>,
+      cell: ({ row }) => {
+        const expenseData: Expense = {
+          _id: '',
+          planId: row.original.planId || '',
+          userId: '',
+          expenses: [row.original],
+          currency: currency
+        };
+        return (
+          <ExpenseSheet
+            planId={row.original.planId}
+            edit
+            data={expenseData}
+            preferredCurrency={currency}
+          />
+        );
+      },
+    },
+    {
+      accessorKey: "whoSpent",
+      header: () => <div className="text-left">Who Spent</div>,
       cell: ({ row }) => (
-        <ExpenseSheet
-          planId={row.original.planId}
-          edit
-          data={row.original}
-          preferredCurrency={currency}
-        />
+        <div className="text-left font-medium">
+          {row.original.whoSpent}
+        </div>
       ),
     },
     {
-      accessorKey: "whopaid",
-      header: () => <div className="text-left">Who Spent</div>,
-      cell: ({ row }) => <div className="text-left font-medium">{row.original.whoSpent}</div>,
-    },
-    {
       accessorKey: "category",
-      header: ({ column }) => {
-        return (
-          <div className="text-left">
-            <Button
-              variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            >
-              Category
-              <CaretSortIcon className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-        );
-      },
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Category
+          <CaretSortIcon className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => (
         <div className="lowercase text-left flex gap-1 ml-4 items-center">
-          {expenseCategories.find((e) => e.key === row.original.category)?.icon}
+          {expenseCategories.find((e) => e.key === row.getValue("category"))?.icon}
           {row.getValue("category")}
         </div>
       ),
@@ -93,7 +105,6 @@ export const getColumns = (currency: string): ColumnDef<Expense, any>[] => {
       header: () => <div className="text-right">Amount</div>,
       cell: ({ row }) => {
         const amount = parseFloat(row.getValue("amount"));
-        // Format the amount as a dollar amount
         const formatted = new Intl.NumberFormat("en-US", {
           style: "currency",
           currency: currency || "INR",
@@ -122,12 +133,20 @@ export const getColumns = (currency: string): ColumnDef<Expense, any>[] => {
     {
       id: "actions",
       header: () => <div className="text-right">Actions</div>,
-      cell: ({ row }) => (
-        <div className="text-right">
-          {/* Fix: Pass the row instead of expense array */}
-          <DropDownActions row={row} />
-        </div>
-      ),
+      cell: ({ row }) => {
+        const expenseData = {
+          _id: '',
+          planId: row.original.planId || '',
+          userId: '',
+          expenses: [row.original],
+          currency: currency
+        };
+        return (
+          <div className="text-right">
+            <DropDownActions row={{ original: expenseData }} />
+          </div>
+        );
+      },
     },
   ];
 };

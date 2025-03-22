@@ -7,16 +7,22 @@ import axios from 'axios';
 
 import { useUser } from "@clerk/clerk-react";
 
-interface Expense {
-  _id: string;
-  planId: string;
-  userId: string;
+interface ExpenseEntry {
   purpose: string;
   amount: number;
   category: "food" | "commute" | "shopping" | "gifts" | "accomodations" | "others";
   date: string;
   whoSpent: string;
+}
+
+interface Expense {
+  _id: string;
+  planId: string;
+  userId: string;
+  expenses: ExpenseEntry[];
   currency: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface ExpenseSectionProps {
@@ -241,7 +247,7 @@ const ExpenseSection: React.FC<ExpenseSectionProps> = ({ planId }) => {
         />
       </div>
     );
-
+    console.log("data hai bhai",data)
   if (data)
     return (
       <>
@@ -258,6 +264,7 @@ const ExpenseSection: React.FC<ExpenseSectionProps> = ({ planId }) => {
           expenses={data}
           preferredCurrency={preferredCurrency}
         /> */}
+        
         <DataTable data={data} preferredCurrency={preferredCurrency} />
       </>
     );

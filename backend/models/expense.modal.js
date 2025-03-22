@@ -1,17 +1,6 @@
-// backend/models/expense.model.js
 import mongoose from 'mongoose';
 
-const expenseSchema = new mongoose.Schema({
-  planId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Plan',
-    required: true
-  },
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
+const expenseEntrySchema = new mongoose.Schema({
   purpose: {
     type: String,
     required: true
@@ -33,7 +22,21 @@ const expenseSchema = new mongoose.Schema({
   whoSpent: {
     type: String,
     required: true
+  }
+});
+
+const expenseSchema = new mongoose.Schema({
+  planId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Plan',
+    required: true
   },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  expenses: [expenseEntrySchema],
   currency: {
     type: String,
     required: true,

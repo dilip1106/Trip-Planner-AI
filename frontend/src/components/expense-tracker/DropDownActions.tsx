@@ -14,7 +14,7 @@ import {
   import { Expense } from "./DataColumns"; // Import from where your Expense interface is defined
   
   export interface DropdownActionsProps {
-    row: Row<Expense>;
+    row: { original: Expense };
     onDataChange?: () => void; // Optional callback to refresh data after deletion
   }
   
