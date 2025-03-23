@@ -11,7 +11,6 @@ import MenuItems from "@/components/home/MenuItems";
 const MobileMenu = () => {
   const [open, setOpen] = useState(false);
   const asideRef = useRef<HTMLDivElement>(null);
-  const {planId} = useParams<{planId: string}>();
 
   const handleClickOutside = (event: MouseEvent) => {
     if (asideRef.current && !asideRef.current.contains(event.target as Node)) {

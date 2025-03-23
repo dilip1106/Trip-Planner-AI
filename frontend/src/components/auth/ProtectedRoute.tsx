@@ -1,4 +1,4 @@
-import { Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";

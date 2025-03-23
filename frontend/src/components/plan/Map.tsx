@@ -166,7 +166,7 @@ const MapViewButton = ({
 };
 
 // Main Map component
-const Map: React.FC<MapProps> = ({ topPlacesToVisit, selectedPlace, darkMode = false, planId }) => {
+const Map: React.FC<MapProps> = ({ topPlacesToVisit, selectedPlace, darkMode = false }) => {
   const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>(selectedPlace);
   const [mapZoom, setMapZoom] = useState(13);
   const [libraries] = useState<("places" | "drawing" | "geometry" | "visualization")[]>(["places"]);

@@ -105,35 +105,7 @@ export default function DataTable({
   }, [data]);
 
   // Delete expense functionality (modified to work with your data structure)
-  const deleteExpense = async (expenseId: string, expenseDocId: string) => {
-    try {
-      const userData = getUserData();
-        
-        if (!userData) {
-          return;
-        }
-      setLoading(true);
-      // This is a placeholder - you'll need to implement the actual API call
-      // based on your backend structure
-      await axios.post(`/api/expense/delete`, { 
-        expenseId,
-        expenseDocId,
-        userData
-      });
-      
-      // Update the local state to remove the deleted expense
-      setTableData(prevData => 
-        prevData.filter(expense => expense._id !== expenseId)
-      );
-      
-      setError(null);
-    } catch (err) {
-      setError("Failed to delete expense");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+ 
 
   // Delete multiple expenses
   const deleteMultipleExpenses = async (ids: { expenseId: string, expenseDocId: string }[]) => {

@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-
 const MenuItems = () => {
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);

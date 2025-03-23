@@ -7,7 +7,6 @@ import {
   } from "@/components/ui/dropdown-menu";
   import { Button } from "@/components/ui/button";
   import { DotsHorizontalIcon } from "@radix-ui/react-icons";
-  import { Row } from "@tanstack/react-table";
   import { Trash2Icon } from "lucide-react";
   import axios from "axios";
   import { useAuth } from "@clerk/clerk-react";

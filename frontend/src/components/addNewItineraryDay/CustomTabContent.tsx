@@ -5,7 +5,6 @@ import {cn} from "@/lib/utils";
 import {Label} from "@radix-ui/react-label";
 import {TabsContent} from "@radix-ui/react-tabs";
 import {TrashIcon, Plus} from "lucide-react";
-import {register} from "module";
 import {Input} from "@/components/ui/input";
 import {
   FieldErrors,

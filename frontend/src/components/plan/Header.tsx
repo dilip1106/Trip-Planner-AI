@@ -10,6 +10,7 @@ import FeedbackSheet from "../common/FeedbackSheet";
 import PlanComboBox from "./PlanComboBox";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import MobileMenu from "./MobileMenu";
 
 interface HeaderProps {
   isPublic?: boolean;
@@ -74,7 +75,7 @@ const Header = ({ isPublic = false }: HeaderProps) => {
             </ul>
           </div>
           <div className="md:hidden flex gap-6 flex-1">
-            {/* <MobileMenu isPublic={isPublic} /> */}
+            <MobileMenu isPublic={false} />
           </div>
           <div className="flex gap-4 justify-end items-center flex-1">
             <ClerkLoading>

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import DataTable from "@/components/expense-tracker/DataTable";
 import LoadingComponent from "@/components/expense-tracker/LoadingComponent";
-import ExpenseMetrics from "@/components/expense-tracker/ExpenseMetrics";
 import ExpenseSheet from "@/components/expense-tracker/ExpenseSheet";
 import axios from 'axios';
 

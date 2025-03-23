@@ -75,7 +75,54 @@ export const getAllPlans = async (req, res) => {
     res.status(400).json({ success: false, error: error.message });
   }
 };
-
+export const getMinimalPlans = async (req, res) => {
+  try {
+    const { clerkId } = req.user;
+    
+    // Find user in our database
+    const user = await User.findOne({ clerkId });
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'User not found' 
+      });
+    }
+    
+    // Get minimal plan data for owned plans
+    const ownedPlans = await Plan.find(
+      { user: user._id },
+      { _id: 1, destination: 1 } // Only select _id and destination fields
+    );
+    
+    // Get minimal plan data for collaborated plans
+    const collaboratedPlans = await Plan.find(
+      {
+        'collaborators.clerkUserId': clerkId,
+        'collaborators.status': 'accepted'
+      },
+      { _id: 1, destination: 1 } // Only select _id and destination fields
+    );
+    
+    res.status(200).json({ 
+      success: true, 
+      data: {
+        owned: ownedPlans.map(plan => ({
+          _id: plan._id,
+          destination: plan.destination
+        })),
+        collaborated: collaboratedPlans.map(plan => ({
+          _id: plan._id,
+          destination: plan.destination
+        }))
+      } 
+    });
+  } catch (error) {
+    res.status(400).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+};
 
 export const getPlanById = async (req, res) => {
   try {

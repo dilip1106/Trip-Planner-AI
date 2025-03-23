@@ -17,7 +17,8 @@ import {
   revokeInvite,
   getAcceptedInvites,
   getPlanByIdForPlan,
-  getPlanUsers
+  getPlanUsers,
+  getMinimalPlans
 } from '../controllers/plan.controller.js';
 import { authenticateUser } from '../middleware/verifyAuthUser.js';
 import Plan from '../models/plans.model.js';
@@ -36,6 +37,7 @@ router.get('/weather', getWeather);
 
 
 router.post('/',authenticateUser, getAllPlans);
+router.post('/plan-name-only',authenticateUser, getMinimalPlans);
 router.get('/public', getPublicPlans);
 
 router.post('/:id/view', authenticateUser, getPlanById);

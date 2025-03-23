@@ -50,7 +50,7 @@ export default function DeletePlanButton({ planId }: DeletePlanButtonProps) {
         return;
       }
       
-      const { id, dismiss } = toast({
+      const {  dismiss } = toast({
         title: "Deleting Plan",
         description: "Your plan is being deleted. Please wait...",
       });

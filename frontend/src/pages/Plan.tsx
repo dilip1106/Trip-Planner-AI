@@ -1,5 +1,6 @@
 import CommunityPlan from "@/components/plan/CommunityPlan";
 import Header from "@/components/plan/Header";
+import MobileMenu from "@/components/plan/MobileMenu";
 import Sidebar from "@/components/plan/Sidebar";
 
 export default  function PlanPage() {
@@ -13,7 +14,6 @@ export default  function PlanPage() {
              lg:border-r lg:border-muted-foreground/30 
              relative"
           >
-            
             
             <Sidebar  isPublic={true} />
           </div>

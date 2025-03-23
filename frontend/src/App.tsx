@@ -1,8 +1,6 @@
-import {BrowserRouter as Router, Routes, Route, useParams} from 'react-router-dom';
+import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 import Plan from './pages/Plan';
 import Collaborator from './pages/Collaborator';
-import Layout from './layout/Plan';
-import PlanPage from './pages/Plan'; 
 import Home from './pages/Home'; 
 import Dashboard from './components/dashboard/Dashboard';
 import { QueryClient, QueryClientProvider } from 'react-query';

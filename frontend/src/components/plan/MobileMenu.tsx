@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { navlinks } from "@/lib/constants";
-import { Dispatch, SetStateAction, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AiOutlineClose, AiOutlineMenu } from "react-icons/ai";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";

@@ -45,16 +45,16 @@ const ItineraryDayForm = ({ planId, setOpen, queryClient }: ItineraryDayFormProp
   };
   
   // Use React Query to get the current itinerary data
-  const { data: planData } = useQuery(
+  useQuery(
     ['plan', planId],
     async () => {
       const userData = getUserData();
       if (!userData) throw new Error("Authentication required");
-      
+
       const response = await axios.post(`http://localhost:5000/api/plan/${planId}/view`, {
         userData
       });
-      
+
       return response.data.data;
     },
     {
@@ -67,7 +67,7 @@ const ItineraryDayForm = ({ planId, setOpen, queryClient }: ItineraryDayFormProp
             const match = day.title.match(/Day\s+(\d+)/i);
             return match ? parseInt(match[1], 10) : 0;
           });
-          
+
           // Find the maximum day number
           const maxDayNumber = Math.max(...dayNumbers, 0);
           setNextDayNumber(maxDayNumber + 1);

@@ -1,8 +1,6 @@
 import React, { useMemo } from 'react';
 import { Link, useParams, useLocation, useNavigate } from 'react-router-dom';
-import Pulse from '@/components/shared/Pulse';
 import { Button } from '@/components/ui/button';
-import { usePlanContext } from '@/context/PlanContexProvider';
 import { controlCenterSections, planSections } from '@/lib/constants';
 import { LockIcon } from 'lucide-react';
 import { TooltipContainer } from '@/components/shared/Toolip';

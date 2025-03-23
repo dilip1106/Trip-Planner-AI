@@ -2,10 +2,9 @@
 import { ItineraryValidationSchema } from "@/components/addNewItineraryDay/ItineraryValidationSchema";
 import { useZodForm } from "./useZodForm";
 import { useRef } from "react";
-import { useFieldArray, FieldArrayWithId } from 'react-hook-form';
-import { z } from "zod";
+import { useFieldArray } from 'react-hook-form';
 
-const useItineraryForm = (planId: string) => {
+const useItineraryForm = () => {
 
     const ref = useRef({
         afternoon: false,

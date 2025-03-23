@@ -24,11 +24,6 @@ import axios, { AxiosError } from "axios";
 type Plan = {
   _id: string;
   destination: string;
-  fromDate?: string | null;
-  toDate?: string | null;
-  nameoftheplace?: string;
-  isPublic?: boolean;
-  isSharedPlan?: boolean;
 };
 
 type ApiResponse = {
@@ -38,17 +33,13 @@ type ApiResponse = {
     collaborated: Plan[];
   };
 };
+
 export default function PlanComboBox() {
   const { isSignedIn } = useAuth();
   const { user } = useUser();
-  
-  // Function to get user data for the backend
-  
   const [open, setOpen] = React.useState(false);
-  // const [plans, setPlans] = useState<any[]>([]); // Replace `any` with your actual plan type
-  // const [loading, setLoading] = useState<boolean>(true);
-const [plans, setPlans] = useState<Plan[] | null>(null);
-const [error, setError] = useState<string | null>(null);
+  const [plans, setPlans] = useState<Plan[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation(); // React Router equivalent of usePathname
   const navigate = useNavigate(); // React Router equivalent of useRouter
@@ -68,6 +59,7 @@ const [error, setError] = useState<string | null>(null);
       image: user.imageUrl
     };
   };
+
   useEffect(() => {
     const fetchUserData = async () => {
       setIsLoading(true);
@@ -79,29 +71,18 @@ const [error, setError] = useState<string | null>(null);
           return;
         }
         
-        // Fetch both plans and credits in parallel
-        const [plansResponse] = await Promise.all([
-          axios.post<ApiResponse>(`http://localhost:5000/api/plan/`, { userData }),
-        ]);
+        const response = await axios.post<ApiResponse>(
+          'http://localhost:5000/api/plan/plan-name-only', 
+          { userData }
+        );
         
-        // Handle plans data
-        const ownedPlans = plansResponse.data.data.owned.map(plan => ({
-          ...plan,
-          nameoftheplace: plan.destination
-        }));
-        
-        const collaboratedPlans = plansResponse.data.data.collaborated.map(plan => ({
-          ...plan,
-          nameoftheplace: plan.destination,
-          isSharedPlan: true
-        }));
-        
-        const allPlans = [...ownedPlans, ...collaboratedPlans];
+        // Combine owned and collaborated plans
+        const allPlans = [
+          ...response.data.data.owned,
+          ...response.data.data.collaborated
+        ];
         setPlans(allPlans);
         
-        // Handle credits data
-        // setCredits(creditsResponse.data.credits || 0);
-        // console.log(credits)
       } catch (err: unknown) {
         console.error("Fetch error:", err);
         const errorMessage = 
@@ -118,8 +99,7 @@ const [error, setError] = useState<string | null>(null);
   }, [isSignedIn, user]);
 
   const getDisplayTitle = () => {
-    const label =
-      plans?.find((plan) => plan._id === planId)?.destination ?? "Select Plan";
+    const label = plans?.find((plan) => plan._id === planId)?.destination ?? "Select Plan";
     return label;
   };
 
@@ -149,8 +129,6 @@ const [error, setError] = useState<string | null>(null);
       <div className="w-[300px] h-8 rounded-md bg-stone-200 animate-pulse" />
     );
   }
-
-  // if (plans.length === 0) return null;
 
   return (
     <div className="sm:flex hidden">

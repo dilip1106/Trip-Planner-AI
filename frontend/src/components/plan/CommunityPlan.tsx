@@ -10,7 +10,6 @@ import PackingChecklist from "../sections/PackingChecklist";
 import BestTimeToVisit from "../sections/BestTimeToVisit";
 import ImageSection from "../sections/ImageSection";
 import axios, { AxiosError } from "axios";
-import Weather from "../sections/Weather";
 
 export default function CommunityPlan() {
   const [plan, setPlan] = useState<any>(null);

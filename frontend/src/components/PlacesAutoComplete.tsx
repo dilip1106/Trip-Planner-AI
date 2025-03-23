@@ -30,7 +30,7 @@ interface GeoapifyResult {
   lon: number
 }
 
-const PlacesAutoComplete = ({ field, form, selectedFromList, setSelectedFromList }: PlacesAutoCompleteProps) => {
+const PlacesAutoComplete = ({ field,  selectedFromList, setSelectedFromList }: PlacesAutoCompleteProps) => {
   const [open, setOpen] = useState(false)
   const [searchValue, setSearchValue] = useState(field.value || "")
   const [suggestions, setSuggestions] = useState<Array<{ place_id: string; description: string }>>([])
