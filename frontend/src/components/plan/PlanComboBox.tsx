@@ -18,47 +18,133 @@ import {
 } from "@/components/ui/popover";
 import { useState, useEffect } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom"; // Import from react-router-dom
+import { useAuth, useUser } from "@clerk/clerk-react";
+import axios, { AxiosError } from "axios";
 
-// Replace this function with your actual API call
-const fetchPlans = async () => {
-  const response = await fetch("/api/plans"); // Adjust URL accordingly
-  if (!response.ok) {
-    throw new Error("Failed to fetch plans");
-  }
-  return response.json();
+type Plan = {
+  _id: string;
+  destination: string;
+  fromDate?: string | null;
+  toDate?: string | null;
+  nameoftheplace?: string;
+  isPublic?: boolean;
+  isSharedPlan?: boolean;
 };
 
+type ApiResponse = {
+  success: boolean;
+  data: {
+    owned: Plan[];
+    collaborated: Plan[];
+  };
+};
 export default function PlanComboBox() {
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  
+  // Function to get user data for the backend
+  
   const [open, setOpen] = React.useState(false);
-  const [plans, setPlans] = useState<any[]>([]); // Replace `any` with your actual plan type
-  const [loading, setLoading] = useState<boolean>(true);
-
+  // const [plans, setPlans] = useState<any[]>([]); // Replace `any` with your actual plan type
+  // const [loading, setLoading] = useState<boolean>(true);
+const [plans, setPlans] = useState<Plan[] | null>(null);
+const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const location = useLocation(); // React Router equivalent of usePathname
   const navigate = useNavigate(); // React Router equivalent of useRouter
   const { planId } = useParams<{ planId: string }>(); // React Router equivalent of useParams
 
+  const getUserData = () => {
+    if (!isSignedIn || !user) return null;
+    
+    const primaryEmail = user.emailAddresses.find(
+      email => email.id === user.primaryEmailAddressId
+    )?.emailAddress;
+
+    return {
+      clerkId: user.id,
+      email: primaryEmail || "",
+      name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      image: user.imageUrl
+    };
+  };
   useEffect(() => {
-    const getPlans = async () => {
+    const fetchUserData = async () => {
+      setIsLoading(true);
       try {
-        const data = await fetchPlans();
-        setPlans(data);
-      } catch (error) {
-        console.error("Error fetching plans:", error);
+        const userData = getUserData();
+        
+        if (!userData) {
+          setIsLoading(false);
+          return;
+        }
+        
+        // Fetch both plans and credits in parallel
+        const [plansResponse] = await Promise.all([
+          axios.post<ApiResponse>(`http://localhost:5000/api/plan/`, { userData }),
+        ]);
+        
+        // Handle plans data
+        const ownedPlans = plansResponse.data.data.owned.map(plan => ({
+          ...plan,
+          nameoftheplace: plan.destination
+        }));
+        
+        const collaboratedPlans = plansResponse.data.data.collaborated.map(plan => ({
+          ...plan,
+          nameoftheplace: plan.destination,
+          isSharedPlan: true
+        }));
+        
+        const allPlans = [...ownedPlans, ...collaboratedPlans];
+        setPlans(allPlans);
+        
+        // Handle credits data
+        // setCredits(creditsResponse.data.credits || 0);
+        // console.log(credits)
+      } catch (err: unknown) {
+        console.error("Fetch error:", err);
+        const errorMessage = 
+          (err instanceof AxiosError && err.response?.data?.error) ||
+          (err instanceof Error ? err.message : 'An error occurred');
+        setError(errorMessage);
+        setPlans(null);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-
-    getPlans();
-  }, []);
+    
+    fetchUserData();
+  }, [isSignedIn, user]);
 
   const getDisplayTitle = () => {
     const label =
-      plans?.find((plan) => plan._id === planId)?.nameoftheplace ?? "Select Plan";
+      plans?.find((plan) => plan._id === planId)?.destination ?? "Select Plan";
     return label;
   };
 
-  if (loading) {
+  const handlePlanSelect = (selectedPlanId: string) => {
+    setOpen(false);
+    
+    // Determine the base route
+    let newPath = '';
+    
+    // Check if we're in a specific feature route (expense-tracker, collaborate, settings)
+    if (location.pathname.includes('/expense-tracker')) {
+      newPath = `/plan/${selectedPlanId}/plan/expense-tracker`;
+    } else if (location.pathname.includes('/collaborate')) {
+      newPath = `/plan/${selectedPlanId}/plan/collaborate`;
+    } else if (location.pathname.includes('/settings')) {
+      newPath = `/plan/${selectedPlanId}/plan/settings`;
+    } else {
+      // Default to main plan view
+      newPath = `/plan/${selectedPlanId}/plan`;
+    }
+
+    navigate(newPath);
+  };
+
+  if (isLoading) {
     return (
       <div className="w-[300px] h-8 rounded-md bg-stone-200 animate-pulse" />
     );
@@ -89,27 +175,14 @@ export default function PlanComboBox() {
             <CommandList>
               <CommandEmpty>No results found.</CommandEmpty>
               <CommandGroup>
-                {plans.map((plan) => (
+                {plans?.map((plan) => (
                   <CommandItem
                     key={plan._id}
                     value={plan._id}
-                    onSelect={(currentValue) => {
-                      setOpen(false);
-                      let updatedUrl = location.pathname.replace(
-                        /\/plans\/[^\/]+/,
-                        "/plans/" + plan._id
-                      );
-                      if (
-                        location.pathname.includes("join") ||
-                        location.pathname.includes("community-plan")
-                      ) {
-                        updatedUrl = `/plans/${plan._id}/plan`;
-                      }
-                      navigate(updatedUrl); // React Router equivalent of router.push
-                    }}
+                    onSelect={() => handlePlanSelect(plan._id)}
                     className="cursor-pointer"
                   >
-                    {plan.nameoftheplace}
+                    {plan.destination}
                   </CommandItem>
                 ))}
               </CommandGroup>

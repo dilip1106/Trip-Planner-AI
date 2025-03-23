@@ -1,6 +1,6 @@
 "use client";
 
-import {ClerkLoading, SignedIn, SignedOut, SignInButton, UserButton} from "@clerk/clerk-react";
+import {ClerkLoading, SignedIn, SignedOut, SignInButton, UserButton, useUser} from "@clerk/clerk-react";
 
 import {Loading} from "@/components/shared/Loading";
 import DrawerWithDialog from "@/components/shared/DrawerWithDialog";
@@ -10,8 +10,52 @@ import FeedbackSheet from "@/components/common/FeedbackSheet";
 import Logo from "@/components/common/Logo";
 import MenuItems from "@/components/home/MenuItems";
 import MobileMenu from "@/components/home/MobileMenu";
+import { useEffect, useState } from "react";
+import axios from "axios";
 
 const Header = () => {
+  const [credits, setCredits] = useState<number>(0);
+    const { isSignedIn, user } = useUser();
+  
+    const getUserData = () => {
+      if (!isSignedIn || !user) return null;
+      
+      const primaryEmail = user.emailAddresses.find(
+        email => email.id === user.primaryEmailAddressId
+      )?.emailAddress;
+  
+      return {
+        clerkId: user.id,
+        email: primaryEmail || "",
+        name: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+        image: user.imageUrl
+      };
+    };
+  
+    useEffect(() => {
+      const fetchCredits = async () => {
+        try {
+          const userData = getUserData();
+          if (!userData) return;
+  
+          const response = await axios.post(
+            'http://localhost:5000/api/auth/credits',
+            { userData }
+          );
+  
+          if (response.data.success) {
+            setCredits(response.data.credits);
+          }
+        } catch (error) {
+          console.error('Error fetching credits:', error);
+        }
+      };
+  
+      if (isSignedIn) {
+        fetchCredits();
+      }
+    }, [isSignedIn, user]);
+  
   return (
     <header
       className={cn(
@@ -24,7 +68,7 @@ const Header = () => {
           <Logo />
           <div className="hidden md:flex items-center justify-center">
             <ul className="flex gap-8 items-center text-sm">
-              {/* <MenuItems /> */}
+              <MenuItems />
             </ul>
           </div>
           <div className="md:hidden flex gap-6 flex-1">
@@ -40,7 +84,7 @@ const Header = () => {
             </SignedOut>
             <SignedIn>
               <div className="flex justify-center items-center gap-2">
-                <DrawerWithDialog />
+                <DrawerWithDialog shouldOpenForCreatePlan={false} credits={credits} />
                 <FeedbackSheet />
                 <ThemeDropdown />
                 <UserButton afterSignOutUrl="/" />

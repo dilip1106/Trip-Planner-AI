@@ -1,23 +1,41 @@
-import {navlinks} from "@/lib/constants";
-import {useConvexAuth} from "convex/react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 
-export default function MenuItems() {
-  const {isAuthenticated} = useConvexAuth();
+const MenuItems = () => {
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <>
-      {navlinks.map((link) => (
-        <li key={link.id} className="hover:underline cursor-pointer">
-          <Link href={`/#${link.id}`}>{link.text}</Link>
-        </li>
-      ))}
-      {isAuthenticated && (
-        <li className="hover:underline cursor-pointer">
-          <Link href="dashboard" scroll>
-            Dashboard
-          </Link>
-        </li>
-      )}
+      <li>
+        <button
+          onClick={() => scrollToSection('how-it-works')}
+          className="text-foreground/60 hover:text-foreground transition-colors"
+        >
+          How it works?
+        </button>
+      </li>
+      <li>
+        <button
+          onClick={() => scrollToSection('public-plans')}
+          className="text-foreground/60 hover:text-foreground transition-colors"
+        >
+          Community Plans
+        </button>
+      </li>
+      <li>
+        <button
+          onClick={() => scrollToSection('pricing')}
+          className="text-foreground/60 hover:text-foreground transition-colors"
+        >
+          Pricing
+        </button>
+      </li>
     </>
   );
-}
+};
+
+export default MenuItems;

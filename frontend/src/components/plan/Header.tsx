@@ -1,7 +1,7 @@
 import Logo from "@/components/common/Logo"; // Assuming this Logo component exists in the "common" folder
 // Import classnames if needed for class concatenation
 import {cn} from "@/lib/utils"; // Alternative to 'cn'
-// import MenuItems from "./MenuItems";
+import MenuItems from "./MenuItems";
 import  {ThemeDropdown}  from "@/components/ThemeDropdown";
 import { ClerkLoading, SignedOut, SignedIn, SignInButton, UserButton, useUser } from "@clerk/clerk-react";
 import { Loading } from "../shared/Loading";
@@ -11,7 +11,11 @@ import PlanComboBox from "./PlanComboBox";
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const Header = () => {
+interface HeaderProps {
+  isPublic?: boolean;
+}
+
+const Header = ({ isPublic = false }: HeaderProps) => {
   const [credits, setCredits] = useState<number>(0);
   const { isSignedIn, user } = useUser();
 
@@ -64,14 +68,13 @@ const Header = () => {
       <nav className="lg:px-20 px-5 py-3 mx-auto">
         <div className="flex justify-evenly w-full">
           <Logo />
-          {/* You can add MenuItems, MobileMenu, or other components here */}
           <div className="hidden md:flex items-center justify-center">
             <ul className="flex gap-8 items-center text-sm">
-              {/* <MenuItems /> */}
+              <MenuItems isPublic={isPublic} />
             </ul>
           </div>
           <div className="md:hidden flex gap-6 flex-1">
-            {/* <MobileMenu /> */}
+            {/* <MobileMenu isPublic={isPublic} /> */}
           </div>
           <div className="flex gap-4 justify-end items-center flex-1">
             <ClerkLoading>
@@ -83,7 +86,7 @@ const Header = () => {
             </SignedOut>
             <SignedIn>
               <div className="flex justify-center items-center gap-2">
-                {/* <PlanComboBox /> */}
+                <PlanComboBox />
                 <DrawerWithDialog shouldOpenForCreatePlan={false} credits={credits} />
                 <FeedbackSheet />
                 <ThemeDropdown />

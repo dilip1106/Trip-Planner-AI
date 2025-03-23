@@ -133,7 +133,7 @@ export default function Dashboard() {
 
   return (
     <>
-      <Header />
+      <Header isPublic={true}/>
       <main className="flex min-h-[calc(100svh-4rem)] flex-col items-center bg-blue-50/40">
         <section
           className="bg-stone-200 w-full h-full

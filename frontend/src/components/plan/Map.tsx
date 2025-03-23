@@ -174,7 +174,7 @@ const Map: React.FC<MapProps> = ({ topPlacesToVisit, selectedPlace, darkMode = f
 
   // Load Google Maps API
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: "",
+    googleMapsApiKey: import.meta.env.GOOGLE_MAP_KEY,
     libraries
   });
 

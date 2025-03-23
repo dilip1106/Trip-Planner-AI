@@ -1,4 +1,4 @@
-import Header from "@/components/home/Header";
+import Header from "@/components/plan/Header";
 import Sidebar from "@/components/plan/Sidebar";
 import CurrencySelector from "@/components/settings/CurrencySelector";
 import DangerZone from "@/components/settings/DangerZone";
