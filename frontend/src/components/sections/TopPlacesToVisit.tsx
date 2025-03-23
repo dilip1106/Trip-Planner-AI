@@ -227,7 +227,7 @@ const TopPlacesToVisit = ({
           )}
         </div>
         <div className="w-full p-2 h-[30rem]">
-          {/* <Map selectedPlace={selectedPlace} planId={planId} topPlacesToVisit={topPlaces} /> */}
+          <Map selectedPlace={selectedPlace}  topPlacesToVisit={topPlaces} />
         </div>
       </div>
     </SectionWrapper>

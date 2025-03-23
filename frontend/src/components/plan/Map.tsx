@@ -1,172 +1,330 @@
 import React, { useEffect, useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/components/ui/use-toast";
+import { GoogleMap, useJsApiLoader, OverlayView } from "@react-google-maps/api";
 
-type Location = {
-  lat: number;
-  lng: number;
-};
+// Define map dark mode styles
+const MAPS_DARK_MODE_STYLES = [
+  {
+    "elementType": "geometry",
+    "stylers": [{ "color": "#242f3e" }]
+  },
+  {
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#746855" }]
+  },
+  {
+    "elementType": "labels.text.stroke",
+    "stylers": [{ "color": "#242f3e" }]
+  },
+  {
+    "featureType": "administrative.locality",
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#d59563" }]
+  },
+  {
+    "featureType": "poi",
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#d59563" }]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#263c3f" }]
+  },
+  {
+    "featureType": "poi.park",
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#6b9a76" }]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#38414e" }]
+  },
+  {
+    "featureType": "road",
+    "elementType": "geometry.stroke",
+    "stylers": [{ "color": "#212a37" }]
+  },
+  {
+    "featureType": "road",
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#9ca5b3" }]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#746855" }]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "geometry.stroke",
+    "stylers": [{ "color": "#1f2835" }]
+  },
+  {
+    "featureType": "road.highway",
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#f3d19c" }]
+  },
+  {
+    "featureType": "transit",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#2f3948" }]
+  },
+  {
+    "featureType": "transit.station",
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#d59563" }]
+  },
+  {
+    "featureType": "water",
+    "elementType": "geometry",
+    "stylers": [{ "color": "#17263c" }]
+  },
+  {
+    "featureType": "water",
+    "elementType": "labels.text.fill",
+    "stylers": [{ "color": "#515c6d" }]
+  },
+  {
+    "featureType": "water",
+    "elementType": "labels.text.stroke",
+    "stylers": [{ "color": "#17263c" }]
+  }
+];
 
+// Define colors for markers
+const colors = [
+  "#FF5733", // Orange-Red
+  "#33FF57", // Lime Green
+  "#3357FF", // Blue
+  "#FF33A8", // Pink
+  "#33A8FF", // Light Blue
+  "#A833FF"  // Purple
+];
+
+// Define your place type
 type TopPlace = {
-  id?: string;
+  id: string;
   name: string;
-  coordinates: Location;
+  coordinates: { lat: number; lng: number };
 };
 
 interface MapProps {
-  selectedPlace?: Location;
-  planId: string;
-  topPlacesToVisit?: TopPlace[];
+  topPlacesToVisit: TopPlace[] | undefined;
+  selectedPlace: { lat: number; lng: number } | undefined;
+  darkMode?: boolean;
+  planId?: string;
 }
 
-const Map: React.FC<MapProps> = ({ selectedPlace, planId, topPlacesToVisit }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [places, setPlaces] = useState<TopPlace[]>([]);
-  const [mapElement, setMapElement] = useState<HTMLDivElement | null>(null);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [markers, setMarkers] = useState<google.maps.Marker[]>([]);
+// MapPinMarker component
+const MapPinMarker = ({ index }: { index: number }) => {
+  return (
+    <div
+      aria-label="Map marker"
+      className="relative cursor-pointer select-none"
+      role="button"
+      aria-expanded="false"
+      style={{
+        opacity: 1,
+        pointerEvents: "auto",
+      }}
+    >
+      <div className="transform-none">
+        <div
+          className="absolute flex h-8 w-8 -rotate-45 items-center justify-center rounded-full !rounded-bl-none border-4 border-solid border-white p-1 shadow-md"
+          style={{ backgroundColor: colors[index % 6] }}
+        >
+          <p className="w-2.5 rotate-45 text-base font-bold text-white">{index + 1}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-  // Fetch places from the API if they're not provided directly
-  useEffect(() => {
-    if (!topPlacesToVisit && planId) {
-      fetchTopPlaces();
-    } else if (topPlacesToVisit) {
-      setPlaces(topPlacesToVisit);
-      setIsLoading(false);
-    } else {
-      setIsLoading(false);
-    }
-  }, [topPlacesToVisit, planId]);
+// Map View Type Button
+const MapViewButton = ({ 
+  active, 
+  onClick, 
+  children 
+}: { 
+  active: boolean; 
+  onClick: () => void; 
+  children: React.ReactNode;
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-3 py-1.5 text-xs font-medium transition-colors duration-200 ${
+        active 
+          ? "bg-blue-600 text-white" 
+          : "bg-white text-gray-700 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+      } rounded-md shadow-sm`}
+    >
+      {children}
+    </button>
+  );
+};
 
-  const fetchTopPlaces = async () => {
-    if (!planId) return;
-    
-    try {
-      const response = await fetch(`/api/plans/${planId}/topPlaces`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch places: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      if (data && Array.isArray(data)) {
-        setPlaces(data);
-      }
-    } catch (error) {
-      console.error("Error fetching places:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load places. Please try again later.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+// Main Map component
+const Map: React.FC<MapProps> = ({ topPlacesToVisit, selectedPlace, darkMode = false, planId }) => {
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | undefined>(selectedPlace);
+  const [mapZoom, setMapZoom] = useState(13);
+  const [libraries] = useState<("places" | "drawing" | "geometry" | "visualization")[]>(["places"]);
+  const [mapType, setMapType] = useState<string>('roadmap'); // Initialize as string
+
+  // Load Google Maps API
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: "",
+    libraries
+  });
+
+  // Detect system dark mode preference
+  const [systemDarkMode, setSystemDarkMode] = useState<boolean>(
+    typeof window !== 'undefined' && window.matchMedia && 
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+
+  // Use prop darkMode or fall back to system preference
+  const effectiveDarkMode = darkMode !== undefined ? darkMode : systemDarkMode;
+
+  // Get map types only after API is loaded
+  const getMapType = () => {
+    if (!isLoaded) return 'roadmap';
+    return google.maps.MapTypeId[mapType.toUpperCase() as keyof typeof google.maps.MapTypeId];
   };
 
-  // Initialize the map
+  // Update map type handler
+  const handleMapTypeChange = (type: string) => {
+    setMapType(type);
+  };
+
   useEffect(() => {
-    if (!mapElement) return;
+    if (!selectedPlace) return;
+    zoomSelectedPlace(selectedPlace.lat, selectedPlace.lng);
+  }, [selectedPlace]);
 
-    const initMap = () => {
-      // Default to a fallback location if no selected place
-      const defaultLocation = { lat: 40.7128, lng: -74.0060 }; // New York City
-      const mapOptions = {
-        center: selectedPlace || defaultLocation,
-        zoom: 12,
-        mapTypeId: google.maps.MapTypeId.ROADMAP,
-      };
-
-      const newMap = new google.maps.Map(mapElement, mapOptions);
-      setMap(newMap);
+  // Listen for system dark mode changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      setSystemDarkMode(e.matches);
     };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
-    // Load Google Maps API if not already loaded
-    if (window.google && window.google.maps) {
-      initMap();
-    } else {
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.MAP_KEY}&libraries=places`;
-      script.onload = initMap;
-      document.head.appendChild(script);
-    }
-  }, [mapElement]);
+  const zoomSelectedPlace = (lat: number, lng: number) => {
+    setMapCenter({ lat, lng });
+    setMapZoom(16);
+  };
 
-  // Update map center when selected place changes
-  useEffect(() => {
-    if (!map || !selectedPlace) return;
-    
-    map.setCenter(selectedPlace);
-    map.setZoom(14);
-  }, [map, selectedPlace]);
-
-  // Create or update markers for places
-  useEffect(() => {
-    if (!map || !places || places.length === 0) return;
-    
-    // Clear existing markers
-    markers.forEach(marker => marker.setMap(null));
-    
-    // Create new markers
-    const newMarkers = places.map((place, index) => {
-      // Skip if coordinates are missing or invalid
-      if (!place.coordinates || typeof place.coordinates.lat !== 'number' || typeof place.coordinates.lng !== 'number') {
-        console.warn(`Invalid coordinates for place: ${place.name || 'unnamed'}`);
-        return null;
-      }
-      
-      const marker = new google.maps.Marker({
-        position: place.coordinates,
-        map: map,
-        title: place.name,
-        label: {
-          text: (index + 1).toString(),
-          color: "white",
-        },
-        animation: google.maps.Animation.DROP,
-      });
-      
-      // Add click event to the marker
-      marker.addListener("click", () => {
-        const infoWindow = new google.maps.InfoWindow({
-          content: `<div><h3>${place.name}</h3></div>`,
-        });
-        infoWindow.open(map, marker);
-      });
-      
-      return marker;
-    }).filter(Boolean) as google.maps.Marker[];
-    
-    setMarkers(newMarkers);
-    
-    // If we have places but no selected place yet, use the first one
-    if (places.length > 0 && !selectedPlace && places[0].coordinates) {
-      map.setCenter(places[0].coordinates);
-      map.setZoom(14);
-    }
-    
-    // If we have multiple places, fit the map to show all markers
-    if (places.length > 1) {
-      const bounds = new google.maps.LatLngBounds();
-      places.forEach(place => {
-        if (place.coordinates && place.coordinates.lat && place.coordinates.lng) {
-          bounds.extend(place.coordinates);
-        }
-      });
-      map.fitBounds(bounds);
-    }
-  }, [map, places]);
-
-  if (isLoading) {
-    return <Skeleton className="h-full w-full" />;
+  // Handle loading and error states
+  if (loadError) {
+    return (
+      <div className="w-full h-full flex flex-col gap-2 justify-center items-center bg-background text-center px-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>Error loading Google Maps. Please check your API key.</span>
+      </div>
+    );
   }
 
+  if (!isLoaded) {
+    return (
+      <div className="w-full h-full flex flex-col gap-2 justify-center items-center bg-background text-center px-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin">
+          <line x1="12" y1="2" x2="12" y2="6"></line>
+          <line x1="12" y1="18" x2="12" y2="22"></line>
+          <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line>
+          <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line>
+          <line x1="2" y1="12" x2="6" y2="12"></line>
+          <line x1="18" y1="12" x2="22" y2="12"></line>
+          <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line>
+          <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line>
+        </svg>
+        <span>Loading Google Maps...</span>
+      </div>
+    );
+  }
+
+  // Default content when no places to visit
+  if (!topPlacesToVisit || topPlacesToVisit.length === 0) {
+    return (
+      <div className="w-full h-full flex flex-col gap-2 justify-center items-center bg-background text-center px-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+        <span className="text-sm md:text-base">Search and select a location to add to places to visit</span>
+      </div>
+    );
+  }
+
+  // Render the map with places
   return (
-    <div className="h-full w-full rounded-lg overflow-hidden">
-      <div
-        ref={setMapElement}
-        className="h-full w-full"
-        style={{ borderRadius: "0.5rem" }}
-      />
+    <div className="w-full h-full flex flex-col rounded-md overflow-hidden">
+      {/* Map view toggle controls */}
+      <div className="bg-white dark:bg-gray-900 p-2 flex gap-2 justify-center z-10">
+        <MapViewButton 
+          active={mapType === 'roadmap'} 
+          onClick={() => handleMapTypeChange('roadmap')}
+        >
+          Map
+        </MapViewButton>
+        <MapViewButton 
+          active={mapType === 'satellite'} 
+          onClick={() => handleMapTypeChange('satellite')}
+        >
+          Satellite
+        </MapViewButton>
+        <MapViewButton 
+          active={mapType === 'hybrid'} 
+          onClick={() => handleMapTypeChange('hybrid')}
+        >
+          Hybrid
+        </MapViewButton>
+        <MapViewButton 
+          active={mapType === 'terrain'} 
+          onClick={() => handleMapTypeChange('terrain')}
+        >
+          Terrain
+        </MapViewButton>
+      </div>
+
+      {/* Google Map */}
+      {isLoaded && (
+        <div className="flex-1">
+          <GoogleMap
+            mapContainerStyle={{ height: "100%", width: "100%" }}
+            center={mapCenter}
+            zoom={mapZoom}
+            options={{
+              styles: effectiveDarkMode ? MAPS_DARK_MODE_STYLES : [],
+              disableDefaultUI: false,
+              mapTypeId: getMapType(),
+              clickableIcons: true,
+              scrollwheel: true,
+              mapTypeControl: false,
+            }}
+          >
+            {topPlacesToVisit.map((place, index) => (
+              <OverlayView
+                position={place.coordinates}
+                key={place.id}
+                mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+              >
+                <MapPinMarker index={index} />
+              </OverlayView>
+            ))}
+          </GoogleMap>
+        </div>
+      )}
     </div>
   );
 };
