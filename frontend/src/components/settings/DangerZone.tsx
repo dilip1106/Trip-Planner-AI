@@ -1,8 +1,6 @@
 // src/components/DangerZone.tsx
 import {
     AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
     AlertDialogFooter,

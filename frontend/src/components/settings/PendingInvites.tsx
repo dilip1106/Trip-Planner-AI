@@ -3,7 +3,6 @@ import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth, useUser } from '@clerk/clerk-react';
-import { getDisplayName } from '@/lib/utils';
 
 interface Invite {
   id: string;

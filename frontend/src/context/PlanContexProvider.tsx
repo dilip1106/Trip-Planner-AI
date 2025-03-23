@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import React, { createContext, useContext, useState } from "react";
 
 type PlanType = {
   contentGenerationState?: Record<string, boolean>;
@@ -50,7 +49,6 @@ const PlanContextProvider = ({
   const [plan, setPlan] = useState<PlanType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [shouldShowAlert, setShouldShowAlert] = useState(false);
-  const {planId} = useParams();
 
   return (
     <PlanContext.Provider value={{ planState, setPlanState, shouldShowAlert, plan, isLoading }}>

@@ -2,7 +2,6 @@ import ExpenseSection from '@/components/expense-tracker/ExpenseSection'
 import Header from '@/components/plan/Header'
 import Sidebar from '@/components/plan/Sidebar'
 
-import React from 'react'
 import { useParams } from 'react-router-dom'
 
 const ExpenseTracker = () => {

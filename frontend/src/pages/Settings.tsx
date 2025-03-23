@@ -2,7 +2,6 @@ import Header from "@/components/home/Header";
 import Sidebar from "@/components/plan/Sidebar";
 import CurrencySelector from "@/components/settings/CurrencySelector";
 import DangerZone from "@/components/settings/DangerZone";
-import DisplayName from "@/components/settings/DisplayName";
 import { useParams } from "react-router-dom";
 // import DisplayName from "@/components/settings/DisplayName";
 

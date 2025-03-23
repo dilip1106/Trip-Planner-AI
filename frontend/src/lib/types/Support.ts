@@ -1,6 +1,6 @@
 import { CountryCode } from "./CountryCode";
 import { Coordinate } from "./Unit";
-import { WeatherCondition } from "./WeatherConditions";
+// import { WeatherCondition } from "./WeatherConditions";
 
 
 export interface Weather {

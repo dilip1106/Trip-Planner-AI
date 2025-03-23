@@ -1,7 +1,6 @@
 import PlanLayoutContent from "@/components/plan/PlanLayoutContent";
 
 import { ReactNode } from 'react';
-import Header from '@/components/plan/Header';
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (

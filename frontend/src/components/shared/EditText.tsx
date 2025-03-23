@@ -1,12 +1,10 @@
-import SectionWrapper from "@/components/sections/SectionWrapper";
-import {Button} from "@/components/ui/button";
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
 
-import {Skeleton} from "@/components/ui/skeleton";
+import {Button} from "@/components/ui/button";
+import {Form, FormControl, FormField, FormItem, FormMessage} from "@/components/ui/form";
+
 import {Textarea} from "@/components/ui/textarea";
 import {cn} from "@/lib/utils";
 import {zodResolver} from "@hookform/resolvers/zod";
-import {Info} from "lucide-react";
 import {z} from "zod";
 import {useForm} from "react-hook-form";
 import {useState} from "react";

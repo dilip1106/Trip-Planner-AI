@@ -23,11 +23,8 @@ import {
   Castle,
   ShoppingBag,
   MoonStar,
-  Users,
-  HeartHandshake,
   Heart,
   Contact,
-  User,
   Users2,
 } from "lucide-react";
 import {ReactNode} from "react";

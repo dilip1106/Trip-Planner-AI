@@ -12,7 +12,6 @@ interface ToastProps {
 const Join = () => {
   const { isLoaded, isSignedIn, user } = useUser();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const {token} = useParams();
   const [isProcessing, setIsProcessing] = useState(true);
 

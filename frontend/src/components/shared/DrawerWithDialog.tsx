@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -17,23 +17,8 @@ import { Link } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
 
 // Replace this with your backend API call for user data
-const fetchUserData = async () => {
-  try {
-    const response = await fetch("/api/user");
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Failed to fetch user data:", error);
-    return null;
-  }
-};
 
-  
-interface User {
-  credits: number;
-  freeCredits: number;
-  email: string;
-}
+
 
 interface DrawerDialogProps {
   shouldOpenForCreatePlan: boolean;

@@ -27,12 +27,12 @@ const Timeline = ({ itinerary, planId, allowEdit, queryClient }: TimelineProps) 
   }, [itinerary]);
 
   // Function to handle day deletion if needed
-  const handleDeleteDay = (dayId: string) => {
-    if (window.confirm('Are you sure you want to delete this day?')) {
-      // Delete logic would go here
-      // You'd need to pass this function to your ItineraryDayHeader
-    }
-  };
+  // const handleDeleteDay = (dayId: string) => {
+  //   if (window.confirm('Are you sure you want to delete this day?')) {
+  //     // Delete logic would go here
+  //     // You'd need to pass this function to your ItineraryDayHeader
+  //   }
+  // };
 
   if (filteredItinerary.length === 0)
     return (
