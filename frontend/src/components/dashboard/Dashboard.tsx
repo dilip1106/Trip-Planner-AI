@@ -6,7 +6,7 @@ import DrawerDialog from "@/components/shared/DrawerWithDialog";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { ChangeEvent, useState, useEffect } from "react";
-import Header from "../plan/Header";
+import Header from "./Header";
 import axios, { AxiosError } from "axios";
 
 import { useAuth, useUser } from "@clerk/clerk-react";

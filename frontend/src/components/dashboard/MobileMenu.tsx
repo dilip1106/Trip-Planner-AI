@@ -1,22 +1,24 @@
-"use client";
+import { Button } from "@/components/ui/button";
+import { useEffect, useRef, useState } from "react";
+import { AiOutlineClose, AiOutlineMenu } from "react-icons/ai";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import Sidebar from "@/components/plan/Sidebar";
+import { ArrowLeft } from "lucide-react";
+import MenuItems from "../plan/MenuItems";
 
-import {Button} from "@/components/ui/button";
-import {useEffect, useRef, useState} from "react";
-import {AiOutlineClose, AiOutlineMenu} from "react-icons/ai";
-import {cn} from "@/lib/utils";
-import MenuItems from "@/components/home/MenuItems";
-import { Link } from "react-router-dom";
-
-const MobileMenu = () => {
+const MobileMenu = ({ isPublic }: { isPublic: boolean }) => {
   const [open, setOpen] = useState(false);
   const asideRef = useRef<HTMLDivElement>(null);
-
+  const { planId } = useParams(); // Access planId from React Router's useParams
+  const navigate = useNavigate(); // To navigate programmatically
   const handleClickOutside = (event: MouseEvent) => {
     if (asideRef.current && !asideRef.current.contains(event.target as Node)) {
       setOpen(false);
     }
   };
 
+  
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -72,8 +74,22 @@ const MobileMenu = () => {
             setOpen(false);
           }}
         >
-          <MenuItems />
+          <li className="cursor-pointer hover:underline">
+            <Link to="/dashboard" className="flex gap-1 justify-end items-center group">
+              <ArrowLeft className="w-4 h-4 group-hover:scale-125 transition-all duration-100 ease-linear" />
+              <span>Go back to Dashboard</span>
+            </Link>
+          </li>
         </ul>
+        <div
+          className="px-5"
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen(false);
+          }}
+        >
+            <MenuItems isPublic={true} />
+        </div>
       </aside>
     </>
   );

@@ -72,7 +72,7 @@ const Header = () => {
             </ul>
           </div>
           <div className="md:hidden flex gap-6 flex-1">
-            {/* <MobileMenu /> */}
+            <MobileMenu />
           </div>
           <div className="flex gap-4 justify-end items-center flex-1">
             <ClerkLoading>
