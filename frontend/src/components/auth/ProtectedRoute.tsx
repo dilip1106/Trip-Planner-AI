@@ -11,7 +11,7 @@ type ProtectedRouteProps = {
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     const navigate = useNavigate();
   const { user } = useUser();
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, isLoaded } = useAuth();
 //   const location = useLocation();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,6 +32,9 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   };
 
   useEffect(() => {
+
+    if (!isLoaded) return;
+
     const checkAccess = async () => {
       if (!isSignedIn || !user || !planId) {
         setIsLoading(false);

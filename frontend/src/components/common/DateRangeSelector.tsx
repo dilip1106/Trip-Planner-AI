@@ -5,8 +5,9 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
+import { format, differenceInDays, addDays } from "date-fns"
 import { cn } from "@/lib/utils"
+import { toast } from "@/components/ui/use-toast"
 
 interface DateRangeSelectorProps {
   value: {
@@ -15,9 +16,10 @@ interface DateRangeSelectorProps {
   }
   onChange: (value: { from: Date | undefined; to: Date | undefined }) => void
   forGeneratePlan?: boolean
+  maxDays?: number
 }
 
-const DateRangeSelector = ({ value, onChange, forGeneratePlan = false }: DateRangeSelectorProps) => {
+const DateRangeSelector = ({ value, onChange, forGeneratePlan = false, maxDays = 10 }: DateRangeSelectorProps) => {
   const [date, setDate] = useState<{
     from: Date | undefined
     to: Date | undefined
@@ -38,6 +40,23 @@ const DateRangeSelector = ({ value, onChange, forGeneratePlan = false }: DateRan
 
   // Handle date selection
   const handleSelect = (selectedDate: any) => {
+    // If we have a from date and the user is selecting a to date
+    if (selectedDate.from && selectedDate.to) {
+      // Calculate the difference in days
+      const daysDifference = differenceInDays(selectedDate.to, selectedDate.from)
+
+      // If the range is more than maxDays, adjust the to date
+      if (daysDifference > maxDays) {
+        const adjustedTo = addDays(selectedDate.from, maxDays)
+        selectedDate.to = adjustedTo
+        toast({
+          title: "Date range limited",
+          description: `You can only select up to ${maxDays} days.`,
+          variant: "destructive",
+        })
+      }
+    }
+
     const newDate = {
       ...date,
       ...selectedDate,
@@ -45,7 +64,7 @@ const DateRangeSelector = ({ value, onChange, forGeneratePlan = false }: DateRan
 
     setDate(newDate)
 
-    // Only call onChange when both dates are selected or when clearing
+    // Call onChange when both dates are selected or when clearing
     if ((newDate.from && newDate.to) || (!newDate.from && !newDate.to)) {
       onChange(newDate)
     }
@@ -87,6 +106,7 @@ const DateRangeSelector = ({ value, onChange, forGeneratePlan = false }: DateRan
             numberOfMonths={2}
             disabled={forGeneratePlan ? { before: new Date() } : undefined}
           />
+          <div className="p-3 border-t text-xs text-muted-foreground">Maximum selection: {maxDays} days</div>
         </PopoverContent>
       </Popover>
     </div>

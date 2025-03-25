@@ -84,19 +84,18 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
       return;
     }
 
-    startTransitionEmptyPlan(async () => {
-      try {
-        const userData = getUserData();
-        
-        const response = await axios.post("http://localhost:5000/api/plan/empty", {
-          userData,
-          destination: values.placeName,
-          fromDate: values.datesOfTravel.from.toISOString(),
-          toDate: values.datesOfTravel.to.toISOString(),
-          activityPreferences: values.activityPreferences,
-          companion: values.companion
-        });
+    startTransitionEmptyPlan(() => {
+      const userData = getUserData();
       
+      axios.post("http://localhost:5000/api/plan/empty", {
+        userData,
+        destination: values.placeName,
+        fromDate: values.datesOfTravel.from.toISOString(),
+        toDate: values.datesOfTravel.to.toISOString(),
+        activityPreferences: values.activityPreferences,
+        companion: values.companion
+      })
+      .then((response) => {
         closeModal(false);
         toast({
           title: "Success",
@@ -104,14 +103,15 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
         });
         
         navigate(`/plan/${response.data._id}/plan`);
-      } catch (error) {
+      })
+      .catch((error) => {
         console.error("Error creating empty plan:", error);
         toast({
           title: "Error",
           description: axios.isAxiosError(error) ? error.response?.data?.error : "Failed to create empty plan",
           variant: "destructive"
         });
-      }
+      });
     });
   }
 
@@ -132,19 +132,18 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
       return;
     }
 
-    startTransitionAIPlan(async () => {
-      try {
-        const userData = getUserData();
-        
-        const response = await axios.post("http://localhost:5000/api/plan/generate", {
-          userData, // Send user data directly instead of token
-          destination: values.placeName,
-          fromDate: values.datesOfTravel.from.toISOString(),
-          toDate: values.datesOfTravel.to.toISOString(),
-          activityPreferences: values.activityPreferences,
-          companion: values.companion
-        });
-        
+    startTransitionAIPlan(() => {
+      const userData = getUserData();
+      
+      axios.post("http://localhost:5000/api/plan/generate", {
+        userData,
+        destination: values.placeName,
+        fromDate: values.datesOfTravel.from.toISOString(),
+        toDate: values.datesOfTravel.to.toISOString(),
+        activityPreferences: values.activityPreferences,
+        companion: values.companion
+      })
+      .then((response) => {
         closeModal(false);
         toast({
           title: "Success",
@@ -152,14 +151,15 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
         });
         
         navigate(`/plan/${response.data.data._id}/plan`);
-      } catch (error) {
+      })
+      .catch((error) => {
         console.error("Error generating AI plan:", error);
         toast({
           title: "Error",
           description: axios.isAxiosError(error) ? error.response?.data?.error : "Failed to generate AI plan",
           variant: "destructive"
         });
-      }
+      });
     });
   }
 
@@ -192,7 +192,7 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
             <FormItem className="flex flex-col">
               <FormLabel>Select Dates</FormLabel>
               <FormControl>
-                <DateRangeSelector value={field.value} onChange={field.onChange} forGeneratePlan={true} />
+                <DateRangeSelector value={field.value} onChange={field.onChange} forGeneratePlan={false} />
               </FormControl>
               <FormMessage />
             </FormItem>
