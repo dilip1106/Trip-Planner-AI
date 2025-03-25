@@ -71,26 +71,26 @@ const TopPlacesToVisit = ({
     setSelectedPlace(coordinates);
   };
 
-  const addNewPlaceToTopPlaces = async (lat: number, lng: number, placeName: string) => {
-    const newPlace = { id: uuidv4(), coordinates: { lat, lng }, name: placeName };
-    const updatedPlaces = [...topPlaces, newPlace];
+  // const addNewPlaceToTopPlaces = async (lat: number, lng: number, placeName: string) => {
+  //   const newPlace = { id: uuidv4(), coordinates: { lat, lng }, name: placeName };
+  //   const updatedPlaces = [...topPlaces, newPlace];
     
-    try {
-      await updatePlacesInBackend(updatedPlaces);
-      setTopPlaces(updatedPlaces);
-      setSelectedPlace({ lat, lng });
+  //   try {
+  //     await updatePlacesInBackend(updatedPlaces);
+  //     setTopPlaces(updatedPlaces);
+  //     setSelectedPlace({ lat, lng });
       
-      toast({
-        description: `Added ${placeName} to your top places!`,
-      });
-    } catch (error) {
-      console.error("Failed to add place:", error);
-      toast({
-        description: "Failed to add place. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
+  //     toast({
+  //       description: `Added ${placeName} to your top places!`,
+  //     });
+  //   } catch (error) {
+  //     console.error("Failed to add place:", error);
+  //     toast({
+  //       description: "Failed to add place. Please try again.",
+  //       variant: "destructive"
+  //     });
+  //   }
+  // };
 
   const handleDeletePlace = async (id: string) => {
     if (!topPlaces) return;

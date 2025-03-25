@@ -45,81 +45,12 @@ export default function PublicPlans() {
     fetchPlans();
   }, []);
 
-  // const mockPlans: Plan[] = [
-  //   {
-  //     _id: "12345",
-  //     url: "https://www.travelplannerai.online/_next/image?url=https%3A%2F%2Fkindred-rhinoceros-563.convex.cloud%2Fapi%2Fstorage%2Fa400ae1f-2994-4431-8a18-ce7170a907b7&w=1920&q=75",
-  //     isSharedPlan: false,
-  //     fromDate: null,
-  //     toDate: null,
-  //     nameoftheplace: "Paris, France",
-  //   },
-  //   {
-  //     _id: "12346",
-  //     url:"https://www.travelplannerai.online/_next/image?url=https%3A%2F%2Fkindred-rhinoceros-563.convex.cloud%2Fapi%2Fstorage%2Fbb0d222b-ac06-4c30-a69e-4fb0f4d9031a&w=640&q=75", 
-  //     isSharedPlan: false,
-  //     fromDate: null,
-  //     toDate: null,
-  //     nameoftheplace: "New York City, USA",
-  //   },
-  //   {
-  //     _id: "12347",
-  //     url: "https://www.travelplannerai.online/_next/image?url=https%3A%2F%2Fkindred-rhinoceros-563.convex.cloud%2Fapi%2Fstorage%2F563c4c47-4fde-4abd-8c94-0709e9198041&w=640&q=75",
-  //     isSharedPlan: true,
-  //     fromDate: null,
-  //     toDate: null,
-  //     nameoftheplace: "Tokyo, Japan",
-  //   },
-  //   {
-  //     _id: "12345",
-  //     url: "https://www.travelplannerai.online/_next/image?url=https%3A%2F%2Fkindred-rhinoceros-563.convex.cloud%2Fapi%2Fstorage%2F778723f7-6a6e-49fc-baf6-184f27f576f7&w=1920&q=75",
-  //     isSharedPlan: false,
-  //     fromDate: null,
-  //     toDate: null,
-  //     nameoftheplace: "Paris, France",
-  //   },
-  //   {
-  //     _id: "12346",
-  //     url: "https://www.travelplannerai.online/_next/image?url=https%3A%2F%2Fkindred-rhinoceros-563.convex.cloud%2Fapi%2Fstorage%2F778723f7-6a6e-49fc-baf6-184f27f576f7&w=1920&q=75",
-  //     isSharedPlan: false,
-  //     fromDate: null,
-  //     toDate: null,
-  //     nameoftheplace: "New York City, USA",
-  //   },
-  //   {
-  //     _id: "12347",
-  //     url: "https://www.travelplannerai.online/_next/image?url=https%3A%2F%2Fkindred-rhinoceros-563.convex.cloud%2Fapi%2Fstorage%2F778723f7-6a6e-49fc-baf6-184f27f576f7&w=1920&q=75",
-  //     isSharedPlan: true,
-  //     fromDate: null,
-  //     toDate: null,
-  //     nameoftheplace: "Tokyo, Japan",
-  //   },
-  //   {
-  //     _id: "12345",
-  //     url: "https://www.travelplannerai.online/_next/image?url=https%3A%2F%2Fkindred-rhinoceros-563.convex.cloud%2Fapi%2Fstorage%2F778723f7-6a6e-49fc-baf6-184f27f576f7&w=1920&q=75",
-  //     isSharedPlan: false,
-  //     fromDate: null,
-  //     toDate: null,
-  //     nameoftheplace: "Paris, France",
-  //   },
-  //   {
-  //     _id: "12346",
-  //     url: "https://www.travelplannerai.online/_next/image?url=https%3A%2F%2Fkindred-rhinoceros-563.convex.cloud%2Fapi%2Fstorage%2F778723f7-6a6e-49fc-baf6-184f27f576f7&w=1920&q=75",
-  //     isSharedPlan: false,
-  //     fromDate: null,
-  //     toDate: null,
-  //     nameoftheplace: "New York City, USA",
-  //   },
-  //   {
-  //     _id: "12347",
-  //     url: "https://www.travelplannerai.online/_next/image?url=https%3A%2F%2Fkindred-rhinoceros-563.convex.cloud%2Fapi%2Fstorage%2F778723f7-6a6e-49fc-baf6-184f27f576f7&w=1920&q=75",
-  //     isSharedPlan: true,
-  //     fromDate: null,
-  //     toDate: null,
-  //     nameoftheplace: "Tokyo, Japan",
-  //   },
-  // ];
-
+  if(error){
+    return error
+  }
+  if(loading){
+    return <p>Loading.....</p>
+  }
   return (
     <section
     id="public-plans"

@@ -94,7 +94,7 @@ const ItineraryDayForm = ({ planId, setOpen, queryClient }: ItineraryDayFormProp
     errors,
     isDirty,
     setValue
-  } = useItineraryForm(planId);
+  } = useItineraryForm();
   
   // Set the title to "Day X" when the form initializes
   useEffect(() => {

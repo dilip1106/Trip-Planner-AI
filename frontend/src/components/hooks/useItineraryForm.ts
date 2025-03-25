@@ -4,7 +4,7 @@ import { useZodForm } from "./useZodForm";
 import { useRef } from "react";
 import { useFieldArray } from 'react-hook-form';
 
-const useItineraryForm = (planId: string) => {
+const useItineraryForm = () => {
 
     const ref = useRef({
         afternoon: false,
