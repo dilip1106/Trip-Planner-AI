@@ -9,7 +9,7 @@ interface SidebarProps {
   isPublic: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ isMobile = false, isPublic }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isPublic }) => {
   const { planId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();

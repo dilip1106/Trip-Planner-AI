@@ -127,7 +127,9 @@ export default function Dashboard() {
 
     setFilteredPlans(filteredResults);
   };
-
+if(error){
+  return error;
+}
   // Get final plans to display (filtered or all)
   const finalPlans = filteredPlans !== undefined ? filteredPlans : plans;
 

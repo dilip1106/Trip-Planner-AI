@@ -1,6 +1,5 @@
 import CommunityPlan from "@/components/plan/CommunityPlan";
 import Header from "@/components/plan/Header";
-import MobileMenu from "@/components/plan/MobileMenu";
 import Sidebar from "@/components/plan/Sidebar";
 
 export default  function PlanPage() {

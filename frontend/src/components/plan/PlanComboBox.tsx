@@ -124,6 +124,9 @@ export default function PlanComboBox() {
     navigate(newPath);
   };
 
+  if(error) {
+    return error
+  }
   if (isLoading) {
     return (
       <div className="w-[300px] h-8 rounded-md bg-stone-200 animate-pulse" />

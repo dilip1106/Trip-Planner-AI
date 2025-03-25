@@ -21,7 +21,7 @@ const PlanMetaData = ({
   companion,
   activityPreferences,
 }: PlanMetaDataProps) => {
-  const [selectedDates, setSelectedDates] = useState<DateRange | undefined>({
+  const [selectedDates, setSelectedDates] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
     to: undefined,
   });
@@ -30,7 +30,7 @@ const PlanMetaData = ({
 
   const onChangeTravelDates = (e: DateRange | undefined) => {
     if (!e) return;
-    setSelectedDates(e);
+    setSelectedDates({ from: e.from, to: e.to });
 
     if (e.from && e.to) {
       // Mocking backend logic

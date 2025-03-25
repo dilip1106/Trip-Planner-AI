@@ -20,7 +20,7 @@ type EditTextProps = {
 };
 
 const EditText = ({content, toggleEditMode, updateContent}: EditTextProps) => {
-  const [textContent, setTextContent] = useState(content || "");
+  const [textContent] = useState(content || "");
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

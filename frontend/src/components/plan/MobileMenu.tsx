@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useEffect, useRef, useState } from "react";
 import { AiOutlineClose, AiOutlineMenu } from "react-icons/ai";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import Sidebar from "@/components/plan/Sidebar";
 import { ArrowLeft } from "lucide-react";
@@ -9,8 +9,7 @@ import { ArrowLeft } from "lucide-react";
 const MobileMenu = ({ isPublic }: { isPublic: boolean }) => {
   const [open, setOpen] = useState(false);
   const asideRef = useRef<HTMLDivElement>(null);
-  const { planId } = useParams(); // Access planId from React Router's useParams
-  const navigate = useNavigate(); // To navigate programmatically
+  
   const handleClickOutside = (event: MouseEvent) => {
     if (asideRef.current && !asideRef.current.contains(event.target as Node)) {
       setOpen(false);
