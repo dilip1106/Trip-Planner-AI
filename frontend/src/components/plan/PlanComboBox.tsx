@@ -39,7 +39,7 @@ export default function PlanComboBox() {
   const { user } = useUser();
   const [open, setOpen] = React.useState(false);
   const [plans, setPlans] = useState<Plan[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const location = useLocation(); // React Router equivalent of usePathname
   const navigate = useNavigate(); // React Router equivalent of useRouter
@@ -128,9 +128,9 @@ export default function PlanComboBox() {
     navigate(newPath);
   };
 
-  if(error) {
-    return error
-  }
+  // if(error) {
+  //   return error
+  // }
   if (isLoading) {
     return (
       <div className="w-[300px] h-8 rounded-md bg-stone-200 animate-pulse" />

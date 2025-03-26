@@ -35,7 +35,7 @@ export default function Dashboard() {
   const [plans, setPlans] = useState<Plan[] | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [filteredPlans, setFilteredPlans] = useState<Plan[] | undefined>();
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [credits, setCredits] = useState<number>(0);
 
   const NODE_URI=import.meta.env.VITE_NODE_ENV;
@@ -131,9 +131,10 @@ export default function Dashboard() {
 
     setFilteredPlans(filteredResults);
   };
-if(error){
-  return error;
-}
+  
+// if(error){
+//   return error;
+// }
   // Get final plans to display (filtered or all)
   const finalPlans = filteredPlans !== undefined ? filteredPlans : plans;
 

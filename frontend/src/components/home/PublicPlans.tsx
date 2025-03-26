@@ -13,8 +13,8 @@ interface Plan {
 
 export default function PublicPlans() {
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [, setLoading] = useState(true);
+  const [, setError] = useState<string | null>(null);
 
   const NODE_URI=import.meta.env.VITE_NODE_ENV;
   const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
@@ -48,12 +48,12 @@ export default function PublicPlans() {
     fetchPlans();
   }, []);
 
-  if(error){
-    return error
-  }
-  if(loading){
-    return <p>Loading.....</p>
-  }
+  // if(error){
+  //   return error
+  // }
+  // if(loading){
+  //   return <p>Loading.....</p>
+  // }
   return (
     <section
     id="public-plans"
