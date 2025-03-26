@@ -45,6 +45,10 @@ export default function PlanComboBox() {
   const navigate = useNavigate(); // React Router equivalent of useRouter
   const { planId } = useParams<{ planId: string }>(); // React Router equivalent of useParams
 
+
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   const getUserData = () => {
     if (!isSignedIn || !user) return null;
     
@@ -72,7 +76,7 @@ export default function PlanComboBox() {
         }
         
         const response = await axios.post<ApiResponse>(
-          'http://localhost:5000/api/plan/plan-name-only', 
+          `${BASE_URL}/api/plan/plan-name-only`, 
           { userData }
         );
         

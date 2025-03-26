@@ -35,6 +35,9 @@ const ExpenseSection: React.FC<ExpenseSectionProps> = ({ planId }) => {
   const [loading, setLoading] = useState<boolean>(true);
   const { isSignedIn, user } = useUser();
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   const getUserData = () => {
     if (!isSignedIn || !user) return null;
     
@@ -58,7 +61,7 @@ const ExpenseSection: React.FC<ExpenseSectionProps> = ({ planId }) => {
         if (!userData) {
           return;
         }
-        const response = await axios.post(`http://localhost:5000/api/expense/${planId}/get`,{userData});
+        const response = await axios.post(`${BASE_URL}/api/expense/${planId}/get`,{userData});
         // Check if response.data is an array before setting it
     if (Array.isArray(response.data)) {
       setData(response.data);

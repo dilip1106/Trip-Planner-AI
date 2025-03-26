@@ -43,6 +43,9 @@ const TopPlacesToVisit = ({
   const { isSignedIn } = useAuth();
   const { user } = useUser();
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   useEffect(() => {
     if (!doesTopPlacesToVisitExist) return;
     setSelectedPlace(topPlacesToVisit[0].coordinates);
@@ -145,7 +148,7 @@ const TopPlacesToVisit = ({
     
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/plan/${planId}`,
+        `${BASE_URL}/api/plan/${planId}`,
         { 
           userData,
           topPlacesToVisit: placesForAPI // Changed from topPlaces to topPlacesToVisit to match API

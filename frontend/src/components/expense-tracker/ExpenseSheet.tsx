@@ -96,6 +96,9 @@ export default function ExpenseSheet({
   const [selectedUser, setSelectedUser] = useState<string>('');
   const { user } = useUser();
   const { isSignedIn } = useUser();
+
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
   
   const getUserData = () => {
     if (!isSignedIn || !user) return null;
@@ -186,14 +189,14 @@ export default function ExpenseSheet({
     try {
       if (edit && data) {
         // Update existing expense
-        await axios.put(`http://localhost:5000/api/expense/${data._id}`, {
+        await axios.put(`${BASE_URL}/api/expense/${data._id}`, {
           userData,
           expenses: values.expenses,
           currency: values.currency
         });
       } else {
         // Create new expense
-        await axios.post('http://localhost:5000/api/expense/add', {
+        await axios.post(`${BASE_URL}/api/expense/add`, {
           planId,
           userData,
           expenses: values.expenses,

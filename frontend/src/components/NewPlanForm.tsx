@@ -38,6 +38,10 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
   const [pendingAIPlan, startTransitionAIPlan] = useTransition();
   const [selectedFromList, setSelectedFromList] = useState(false);
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+  console.log(BASE_URL)
+
   const form = useForm<formSchemaType>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -87,7 +91,7 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
     startTransitionEmptyPlan(() => {
       const userData = getUserData();
       
-      axios.post("http://localhost:5000/api/plan/empty", {
+      axios.post(`${BASE_URL}/api/plan/empty`, {
         userData,
         destination: values.placeName,
         fromDate: values.datesOfTravel.from.toISOString(),
@@ -135,7 +139,7 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
     startTransitionAIPlan(() => {
       const userData = getUserData();
       
-      axios.post("http://localhost:5000/api/plan/generate", {
+      axios.post(`${BASE_URL}/api/plan/generate`, {
         userData,
         destination: values.placeName,
         fromDate: values.datesOfTravel.from.toISOString(),

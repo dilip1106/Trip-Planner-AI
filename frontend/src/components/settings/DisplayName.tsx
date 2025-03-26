@@ -31,6 +31,9 @@ const DisplayName = () => {
   const { toast } = useToast();
   const { user, isLoaded, isSignedIn } = useUser();
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -93,7 +96,7 @@ const DisplayName = () => {
     //   }
 
       // Only update backend if Clerk update was successful
-      await axios.put("http://localhost:5000/api/auth/user/update", {
+      await axios.put(`${BASE_URL}/api/auth/user/update`, {
         userData: {
           ...userData,
           name: `${firstName.trim()} ${lastName?.trim() || ''}`.trim(),

@@ -23,6 +23,9 @@ const PendingInvites: React.FC<PendingInvitesProps> = ({ planId }) => {
   const { isSignedIn } = useAuth();
   const { user } = useUser();
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   // Function to get user data for the backend
   const getUserData = () => {
     if (!isSignedIn || !user) return null;
@@ -51,7 +54,7 @@ const PendingInvites: React.FC<PendingInvitesProps> = ({ planId }) => {
       }
       
       try {
-        const response = await axios.post(`http://localhost:5000/api/plan/${planId}/invites`, {
+        const response = await axios.post(`${BASE_URL}/api/plan/${planId}/invites`, {
           userData
         });
         

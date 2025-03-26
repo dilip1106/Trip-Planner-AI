@@ -18,6 +18,9 @@ export default function DeletePlanButton({ planId }: DeletePlanButtonProps) {
   const [isDeleting, setIsDeleting] = useState(false);
   const { isSignedIn, user } = useUser();
   
+
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
   // Function to get user data for the backend
   const getUserData = () => {
     if (!isSignedIn || !user) return null;
@@ -57,7 +60,7 @@ export default function DeletePlanButton({ planId }: DeletePlanButtonProps) {
       
       // Changed from POST to DELETE request to match controller expectation
       await axios.delete(
-        `http://localhost:5000/api/plan/${planId}/delete`,
+        `${BASE_URL}/api/plan/${planId}/delete`,
         { data: { userData } } // For DELETE requests, body must be in "data" property
       );
       

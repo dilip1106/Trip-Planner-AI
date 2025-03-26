@@ -3,6 +3,11 @@ import { ReactNode, useEffect } from "react";
 import { ClerkProvider, useUser } from "@clerk/clerk-react";
 import axios from "axios";
 
+
+const NODE_URI=import.meta.env.VITE_NODE_ENV;
+const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
+
 // Inner component to handle user data persistence
 function UserDataPersistence() {
   const { user, isSignedIn, isLoaded } = useUser();
@@ -31,7 +36,7 @@ async function saveUserToDatabase(user: any) {
     
     // Send data to your backend API using axios
     const response = await axios.post(
-      `http://localhost:5000/api/auth/save-user`, 
+      `${BASE_URL}/api/auth/save-user`, 
       userData
     );
     

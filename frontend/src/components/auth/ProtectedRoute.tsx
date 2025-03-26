@@ -16,6 +16,10 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
     const {planId} = useParams();
+    const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
+
   const getUserData = () => {
     if (!isSignedIn || !user) return null;
     
@@ -49,7 +53,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         }
 
         const response = await axios.post(
-          `http://localhost:5000/api/plan/${planId}/check-access`,
+          `${BASE_URL}/api/plan/${planId}/check-access`,
           { userData }
         );
         console.log(response.data.hasAccess)

@@ -17,6 +17,7 @@ import axios from "axios";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { toast } from "@/components/ui/use-toast";
 
+
 type ItineraryDayHeaderProps = {
   title: string;
   planId: string;
@@ -36,6 +37,9 @@ export default function ItineraryDayHeader({
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   const getUserData = () => {
     if (!isSignedIn || !user) return null;
     
@@ -79,7 +83,7 @@ export default function ItineraryDayHeader({
         
         // Fallback to direct method if the API call fails
         // First fetch existing itinerary
-        const existingResponse = await axios.post(`http://localhost:5000/api/plan/${planId}/view`, {
+        const existingResponse = await axios.post(`${BASE_URL}/api/plan/${planId}/view`, {
           userData
         });
         const existingItinerary = existingResponse.data.data.itinerary || [];
@@ -92,7 +96,7 @@ export default function ItineraryDayHeader({
         });
   
         const response = await axios.put(
-          `http://localhost:5000/api/plan/${planId}`,
+          `${BASE_URL}/api/plan/${planId}`,
           {
             userData,
             itinerary: updatedItinerary

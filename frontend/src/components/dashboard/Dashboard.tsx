@@ -38,6 +38,10 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [credits, setCredits] = useState<number>(0);
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
+
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   
@@ -70,8 +74,8 @@ export default function Dashboard() {
         
         // Fetch both plans and credits in parallel
         const [plansResponse, creditsResponse] = await Promise.all([
-          axios.post<ApiResponse>(`http://localhost:5000/api/plan/`, { userData }),
-          axios.post(`http://localhost:5000/api/auth/credits`, { userData })
+          axios.post<ApiResponse>(`${BASE_URL}/api/plan/`, { userData }),
+          axios.post(`${BASE_URL}/api/auth/credits`, { userData })
         ]);
         
         // Handle plans data

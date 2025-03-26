@@ -16,10 +16,13 @@ export default function PublicPlans() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   // Function to fetch plans
   const fetchPlans = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/plan/public");
+      const response = await axios.get(`${BASE_URL}/api/plan/public`);
       
       // Axios automatically throws an error for non-2xx responses
       // and automatically parses JSON

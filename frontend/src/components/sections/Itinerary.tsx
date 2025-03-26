@@ -19,6 +19,9 @@ const Itinerary = ({ initialItinerary, planId, isLoading: externalLoading, allow
   const { user } = useUser();
   const queryClient = useQueryClient();
   
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   const getUserData = () => {
     if (!isSignedIn || !user) return null;
     
@@ -41,7 +44,7 @@ const Itinerary = ({ initialItinerary, planId, isLoading: externalLoading, allow
       const userData = getUserData();
       if (!userData) throw new Error("Authentication required");
       
-      const response = await axios.post(`http://localhost:5000/api/plan/${planId}/view`, {
+      const response = await axios.post(`${BASE_URL}/api/plan/${planId}/view`, {
         userData
       });
       

@@ -65,9 +65,12 @@ const Weather = ({ placeName }: { placeName: string | undefined }) => {
   const [weatherData, setWeatherData] = useState<CurrentWeatherResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
   
   // Update this URL to match your Express backend URL
-  const API_BASE_URL = 'http://localhost:5000';
+  const API_BASE_URL = BASE_URL;
   
   const getWeather = async (placeName: string) => {
     try {

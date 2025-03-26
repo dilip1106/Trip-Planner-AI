@@ -24,6 +24,9 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ planId, userId, onDefaultUs
   const [users, setUsers] = useState<User[]>([]);
   const { isSignedIn, user } = useUser();
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   const getUserData = () => {
     if (!isSignedIn || !user) return null;
     
@@ -45,7 +48,7 @@ const UserDropdown: React.FC<UserDropdownProps> = ({ planId, userId, onDefaultUs
         const userData = getUserData();
         if (!userData) return;
         
-        const response = await axios.post(`http://localhost:5000/api/plan/${planId}/users`, { userData });
+        const response = await axios.post(`${BASE_URL}/api/plan/${planId}/users`, { userData });
         
         const usersWithCurrentFlag = response.data.map((user: User) => ({
           ...user,

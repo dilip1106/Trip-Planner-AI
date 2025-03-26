@@ -28,6 +28,9 @@ export default function PackingChecklist({
   const { isSignedIn } = useAuth();
   const { user } = useUser();
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   useEffect(() => {
     if (checklist) {
       setLocalChecklist(checklist);
@@ -63,7 +66,7 @@ export default function PackingChecklist({
       }
 
       const response = await axios.put(
-        `http://localhost:5000/api/plan/${planId}`,
+        `${BASE_URL}/api/plan/${planId}`,
         {
           userData,
           packingChecklist: updatedArray

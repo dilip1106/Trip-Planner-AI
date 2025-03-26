@@ -19,6 +19,9 @@ export default function CommunityPlan() {
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   const { planId } = useParams();
+
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
   
   if (!planId) {
     return <p>Plan ID is required</p>;
@@ -54,7 +57,7 @@ export default function CommunityPlan() {
         
         // Send the userData in the request headers or as a POST request with the userData in the body
         const response = await axios.post(
-          `http://localhost:5000/api/plan/${planId}/view`, 
+          `${BASE_URL}/api/plan/${planId}/view`, 
           { userData }
         );
         

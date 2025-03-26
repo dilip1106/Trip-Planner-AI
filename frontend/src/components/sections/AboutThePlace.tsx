@@ -21,6 +21,9 @@ export default function AboutThePlace({ content, isLoading, planId, allowEdit }:
   const { isSignedIn } = useAuth();
   const { user } = useUser();
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   // Update local state when content prop changes
   useEffect(() => {
     setAboutContent(content);
@@ -57,7 +60,7 @@ export default function AboutThePlace({ content, isLoading, planId, allowEdit }:
       
       // Include userData in the request body as expected by your middleware
       const response = await axios.put(
-        `http://localhost:5000/api/plan/${planId}`,
+        `${BASE_URL}/api/plan/${planId}`,
         { 
           userData,
           aboutThePlace: updatedContent.trim()

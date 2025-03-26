@@ -15,6 +15,9 @@ const Join = () => {
   const {token} = useParams();
   const [isProcessing, setIsProcessing] = useState(true);
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   // Simple toast implementation since we're not using the UI library
   const toast = (props: ToastProps) => {
     console.error(`${props.title}: ${props.description}`);
@@ -67,7 +70,7 @@ const Join = () => {
           return;
         }
         
-        const response = await axios.post(`http://localhost:5000/api/plan/invite/accept/${token}`, {
+        const response = await axios.post(`${BASE_URL}/api/plan/invite/accept/${token}`, {
           userData
         });
         

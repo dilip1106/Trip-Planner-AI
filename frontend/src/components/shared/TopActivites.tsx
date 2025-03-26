@@ -28,6 +28,9 @@ export default function TopActivities({
   const { isSignedIn } = useAuth();
   const { user } = useUser();
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   useEffect(() => {
     if (activities) {
       setLocalActivities(activities);
@@ -70,7 +73,7 @@ export default function TopActivities({
 
       // First update the database
       const response = await axios.put(
-        `http://localhost:5000/api/plan/${planId}`,
+        `${BASE_URL}/api/plan/${planId}`,
         {
           userData,
           

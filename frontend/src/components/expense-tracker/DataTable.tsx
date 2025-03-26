@@ -74,6 +74,10 @@ export default function DataTable({
   const [rowSelection, setRowSelection] = useState({});
   const { isSignedIn, user } = useUser();
   const {planId} = useParams();
+
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   const getUserData = () => {
     if (!isSignedIn || !user) return null;
     
@@ -117,7 +121,7 @@ export default function DataTable({
           return;
         }
       // Placeholder for bulk delete API call
-      await axios.post(`http://localhost:5000/api/expense/${planId}/delete-multiple`, { ids,userData });
+      await axios.post(`${BASE_URL}/api/expense/${planId}/delete-multiple`, { ids,userData });
       
       // Update local state
       setTableData(prevData => 

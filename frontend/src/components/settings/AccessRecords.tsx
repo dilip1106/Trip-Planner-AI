@@ -26,6 +26,9 @@ const AccessRecords: React.FC<AccessRecordsProps> = ({ planId }) => {
   const { isSignedIn } = useAuth();
   const { user } = useUser();
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   // Function to get user data for the backend
   const getUserData = () => {
     if (!isSignedIn || !user) return null;
@@ -54,7 +57,7 @@ const AccessRecords: React.FC<AccessRecordsProps> = ({ planId }) => {
       }
       
       try {
-        const response = await axios.post(`http://localhost:5000/api/plan/${planId}/getCollaborator`, {
+        const response = await axios.post(`${BASE_URL}/api/plan/${planId}/getCollaborator`, {
           userData
         });
         
@@ -93,7 +96,7 @@ const AccessRecords: React.FC<AccessRecordsProps> = ({ planId }) => {
     
     try {
       // Now using clerkUserId instead of id
-      await axios.post(`http://localhost:5000/api/plan/${planId}/collaborators/${clerkUserId}/revoke`, {
+      await axios.post(`${BASE_URL}/api/plan/${planId}/collaborators/${clerkUserId}/revoke`, {
         userData: userData
       });
       

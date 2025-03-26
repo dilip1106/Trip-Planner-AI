@@ -15,6 +15,9 @@ import { Sun, Sunrise, Sunset } from "lucide-react";
 import CustomTabContent from "@/components/addNewItineraryDay/CustomTabContent";
 import { toast } from "@/components/ui/use-toast";
 
+const NODE_URI=import.meta.env.VITE_NODE_ENV;
+const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
 export type ItineraryType = z.infer<typeof ItineraryValidationSchema>["itinerary"];
 
 type ItineraryDayFormProps = {
@@ -51,7 +54,7 @@ const ItineraryDayForm = ({ planId, setOpen, queryClient }: ItineraryDayFormProp
       const userData = getUserData();
       if (!userData) throw new Error("Authentication required");
 
-      const response = await axios.post(`http://localhost:5000/api/plan/${planId}/view`, {
+      const response = await axios.post(`${BASE_URL}/api/plan/${planId}/view`, {
         userData
       });
 
@@ -112,7 +115,7 @@ const ItineraryDayForm = ({ planId, setOpen, queryClient }: ItineraryDayFormProp
         }
 
         // First fetch existing itinerary
-        const existingResponse = await axios.post(`http://localhost:5000/api/plan/${planId}/view`, {
+        const existingResponse = await axios.post(`${BASE_URL}/api/plan/${planId}/view`, {
           userData
         });
         const existingItinerary = existingResponse.data.data.itinerary || [];
@@ -134,7 +137,7 @@ const ItineraryDayForm = ({ planId, setOpen, queryClient }: ItineraryDayFormProp
         const updatedItinerary = [...existingItinerary, data.itinerary];
 
         const response = await axios.put(
-          `http://localhost:5000/api/plan/${planId}`,
+          `${BASE_URL}/api/plan/${planId}`,
           {
             userData,
             itinerary: updatedItinerary

@@ -29,6 +29,9 @@ const InviteForm: React.FC<InviteFormProps> = ({ planId }) => {
   const { user } = useUser();
   const { toast } = useToast();
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -87,7 +90,7 @@ const InviteForm: React.FC<InviteFormProps> = ({ planId }) => {
 
     try {
       // Send the invitation request to your backend with user data in body
-      await axios.post(`http://localhost:5000/api/plan/${planId}/collaborators`, {
+      await axios.post(`${BASE_URL}/api/plan/${planId}/collaborators`, {
         email: values.email,
         userData: userData
       });

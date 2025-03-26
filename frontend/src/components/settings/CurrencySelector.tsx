@@ -47,6 +47,9 @@ const CurrencySelector = ({ planId }: CurrencySelectorProps) => {
   const { toast } = useToast();
   const { isSignedIn, user } = useUser();
 
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -81,7 +84,7 @@ const CurrencySelector = ({ planId }: CurrencySelectorProps) => {
         }
         
         const response = await axios.post(
-          `http://localhost:5000/api/plan/${planId}/currency`,
+          `${BASE_URL}/api/plan/${planId}/currency`,
           { userData }
         );
 
@@ -114,7 +117,7 @@ const CurrencySelector = ({ planId }: CurrencySelectorProps) => {
       }
       
       await axios.post(
-        `http://localhost:5000/api/plan/${planId}/currency/update`,
+        `${BASE_URL}/api/plan/${planId}/currency/update`,
         {
           userData,
           currencyCode: values.currency,

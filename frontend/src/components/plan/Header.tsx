@@ -20,6 +20,11 @@ const Header = ({ isPublic = false }: HeaderProps) => {
   const [credits, setCredits] = useState<number>(0);
   const { isSignedIn, user } = useUser();
 
+
+  const NODE_URI=import.meta.env.VITE_NODE_ENV;
+  const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
+
+
   const getUserData = () => {
     if (!isSignedIn || !user) return null;
     
@@ -42,7 +47,7 @@ const Header = ({ isPublic = false }: HeaderProps) => {
         if (!userData) return;
 
         const response = await axios.post(
-          'http://localhost:5000/api/auth/credits',
+          `${BASE_URL}/api/auth/credits`,
           { userData }
         );
 
