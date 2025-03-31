@@ -16,10 +16,11 @@ const Timeline = ({ itinerary, planId, allowEdit, queryClient }: TimelineProps) 
   useEffect(() => {
     if (itinerary) {
       const filtered = itinerary.filter((day) => {
-        const isMorningEmpty = day.activities.morning.length === 0;
-        const isAfternoonEmpty = day.activities.afternoon.length === 0;
-        const isEveningEmpty = day.activities.evening.length === 0;
-
+        // Check if activities and its properties exist before accessing length
+        const isMorningEmpty = !day.activities?.morning?.length;
+        const isAfternoonEmpty = !day.activities?.afternoon?.length;
+        const isEveningEmpty = !day.activities?.evening?.length;
+  
         return !(isMorningEmpty && isAfternoonEmpty && isEveningEmpty);
       });
       setFilteredItinerary(filtered);
@@ -95,7 +96,7 @@ const Activity = ({
   heading: string;
   icon: ReactNode;
 }) => {
-  if (activity.length === 0) return null;
+  if (!activity || activity.length === 0) return null;
   return (
     <div className="flex flex-col gap-2 shadow-md p-2 bg-muted rounded-sm">
       <h3 className="text-sm leading-none text-gray-600  w-max p-2 font-semibold flex justify-center gap-2 items-center capitalize">
