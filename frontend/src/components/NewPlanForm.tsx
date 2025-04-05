@@ -37,6 +37,8 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
   const [pendingEmptyPlan, startTransitionEmptyPlan] = useTransition();
   const [pendingAIPlan, startTransitionAIPlan] = useTransition();
   const [selectedFromList, setSelectedFromList] = useState(false);
+  const [isLoadingEmpty, setIsLoadingEmpty] = useState(false);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
 
   const NODE_URI=import.meta.env.VITE_NODE_ENV;
   const BASE_URL=NODE_URI === 'development' ? "http://localhost:5000" : "";
@@ -88,6 +90,7 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
       return;
     }
 
+    setIsLoadingEmpty(true);
     startTransitionEmptyPlan(() => {
       const userData = getUserData();
       
@@ -115,6 +118,9 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
           description: axios.isAxiosError(error) ? error.response?.data?.error : "Failed to create empty plan",
           variant: "destructive"
         });
+      })
+      .finally(() => {
+        setIsLoadingEmpty(false);
       });
     });
   }
@@ -136,6 +142,7 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
       return;
     }
 
+    setIsLoadingAI(true);
     startTransitionAIPlan(() => {
       const userData = getUserData();
       
@@ -163,6 +170,9 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
           description: axios.isAxiosError(error) ? error.response?.data?.error : "Failed to generate AI plan",
           variant: "destructive"
         });
+      })
+      .finally(() => {
+        setIsLoadingAI(false);
       });
     });
   }
@@ -295,10 +305,10 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
             onClick={() => form.handleSubmit(onSubmitEmptyPlan)()}
             aria-label="generate plan"
             type="button"
-            disabled={pendingEmptyPlan || pendingAIPlan}
+            disabled={isLoadingEmpty || isLoadingAI}
             className="bg-blue-500 text-white hover:bg-blue-600 w-full"
           >
-            {pendingEmptyPlan ? (
+            {isLoadingEmpty ? (
               <div className="flex gap-1 justify-center items-center">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 <span>Creating Plan...</span>
@@ -315,10 +325,10 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
             onClick={() => form.handleSubmit(onSubmitAIPlan)()}
             aria-label="generate AI plan"
             type="button"
-            disabled={pendingAIPlan || pendingEmptyPlan}
+            disabled={isLoadingAI || isLoadingEmpty}
             className="bg-indigo-500 text-white hover:bg-indigo-600 w-full group"
           >
-            {pendingAIPlan ? (
+            {isLoadingAI ? (
               <div className="flex gap-1 justify-center items-center">
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 <span>Generating AI Plan...</span>
