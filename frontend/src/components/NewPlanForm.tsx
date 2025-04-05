@@ -34,8 +34,8 @@ const NewPlanForm = ({ closeModal }: { closeModal: (value: boolean) => void }) =
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [pendingEmptyPlan, startTransitionEmptyPlan] = useTransition();
-  const [pendingAIPlan, startTransitionAIPlan] = useTransition();
+  const [, startTransitionEmptyPlan] = useTransition();
+  const [, startTransitionAIPlan] = useTransition();
   const [selectedFromList, setSelectedFromList] = useState(false);
   const [isLoadingEmpty, setIsLoadingEmpty] = useState(false);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
